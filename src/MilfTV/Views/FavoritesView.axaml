@@ -1,0 +1,115 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:MilfTV.Localization"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:v="using:MilfTV.Views"
+             x:Class="MilfTV.Views.FavoritesView"
+             x:DataType="vm:FavoritesViewModel">
+  <ScrollViewer x:Name="MainScroll">
+    <StackPanel Margin="28,4,28,32" Spacing="22">
+      <StackPanel Spacing="2">
+        <TextBlock Classes="h1" Text="{l:Tr Nav.MyList}" />
+        <TextBlock Classes="muted" Text="{Binding ProfileName, Converter={x:Static l:Loc.Format}, ConverterParameter=MyList.Subtitle}" />
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <RadioButton Classes="chip" GroupName="mylist" Content="{l:Tr MyList.ToWatch}" Command="{Binding SetTabCommand}" CommandParameter="0"
+                     IsChecked="{Binding Tab, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=0, Mode=OneWay}" />
+        <RadioButton Classes="chip" GroupName="mylist" Content="{l:Tr MyList.InProgress}" Command="{Binding SetTabCommand}" CommandParameter="1"
+                     IsChecked="{Binding Tab, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=1, Mode=OneWay}" />
+        <RadioButton Classes="chip" GroupName="mylist" Content="{l:Tr MyList.Watched}" Command="{Binding SetTabCommand}" CommandParameter="2"
+                     IsChecked="{Binding Tab, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=2, Mode=OneWay}" />
+        <RadioButton Classes="chip" GroupName="mylist" Content="{l:Tr MyList.Channels}" Command="{Binding SetTabCommand}" CommandParameter="3"
+                     IsChecked="{Binding Tab, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=3, Mode=OneWay}" />
+      </StackPanel>
+
+      <StackPanel IsVisible="{Binding IsEmptyTab}" Spacing="10" Margin="0,50,0,0" HorizontalAlignment="Center">
+        <TextBlock Classes="icon" Text="&#xEB51;" FontSize="46" Foreground="{DynamicResource TextMuted}" />
+        <TextBlock Classes="muted" Text="{Binding EmptyText}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="520" />
+      </StackPanel>
+
+      <!-- À voir -->
+      <ItemsControl ItemsSource="{Binding ToWatch}" IsVisible="{Binding Tab, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=0}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel ItemSpacing="18" LineSpacing="20" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="core:CatalogItem">
+            <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+              <Button.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="{l:Tr MyList.Remove}" Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveCommand}" CommandParameter="{Binding}" />
+                  <MenuItem Header="{l:Tr MyList.MarkWatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}" />
+                </ContextMenu>
+              </Button.ContextMenu>
+              <v:PosterCard />
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- En cours -->
+      <ItemsControl ItemsSource="{Binding InProgress}" IsVisible="{Binding Tab, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=1}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel ItemSpacing="18" LineSpacing="20" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="core:CatalogItem">
+            <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+              <Button.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="{l:Tr MyList.MarkWatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}" />
+                  <MenuItem Header="{l:Tr MyList.RemoveHistory}" Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveFromHistoryCommand}" CommandParameter="{Binding}" />
+                </ContextMenu>
+              </Button.ContextMenu>
+              <v:PosterCard />
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Déjà vu -->
+      <ItemsControl ItemsSource="{Binding Watched}" IsVisible="{Binding Tab, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=2}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel ItemSpacing="18" LineSpacing="20" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="core:CatalogItem">
+            <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+              <Button.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="{l:Tr MyList.RemoveHistory}" Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveFromHistoryCommand}" CommandParameter="{Binding}" />
+                </ContextMenu>
+              </Button.ContextMenu>
+              <v:PosterCard />
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <!-- Chaînes favorites (communes à tous les profils) -->
+      <StackPanel Spacing="12" IsVisible="{Binding Tab, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=3}">
+        <TextBlock Classes="caption" Text="{l:Tr MyList.ChannelsShared}" />
+        <ItemsControl ItemsSource="{Binding Channels}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel ItemSpacing="14" LineSpacing="14" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="core:LiveChannel">
+              <Button Classes="cardButton" Width="220" Command="{ReflectionBinding $parent[UserControl].DataContext.PlayChannelCommand}" CommandParameter="{Binding}">
+                <Button.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="{l:Tr Ui.RetirerDesFavoris}" Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveCommand}" CommandParameter="{Binding}" />
+                  </ContextMenu>
+                </Button.ContextMenu>
+                <v:ChannelTile />
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

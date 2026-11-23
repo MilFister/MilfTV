@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:MilfTV.Localization"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:data="using:MilfTV.Data"
+             xmlns:ctl="using:MilfTV.Controls"
+             x:Class="MilfTV.Views.ProfilePickerView"
+             x:DataType="vm:ProfilePickerViewModel"
+             Background="{DynamicResource AppBg}">
+  <UserControl.Styles>
+    <Style Selector="Button.profile">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="10" />
+      <Setter Property="CornerRadius" Value="20" />
+    </Style>
+    <Style Selector="Button.profile:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+    </Style>
+    <Style Selector="Border.avatar">
+      <Setter Property="Width" Value="128" />
+      <Setter Property="Height" Value="128" />
+      <Setter Property="CornerRadius" Value="64" />
+      <Setter Property="BorderThickness" Value="3" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Button.profile:pointerover Border.avatar">
+      <Setter Property="BorderBrush" Value="{DynamicResource TextPrimary}" />
+      <Setter Property="RenderTransform" Value="scale(1.05)" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid>
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="34" Margin="40">
+      <ctl:LogoMark Width="56" Height="56" HorizontalAlignment="Center" />
+      <TextBlock Classes="display" Text="{Binding TitleText}" HorizontalAlignment="Center" />
+      <ItemsControl ItemsSource="{Binding Profiles}" HorizontalAlignment="Center">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel HorizontalAlignment="Center" ItemSpacing="18" LineSpacing="18" MaxWidth="1100" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="data:UserProfile">
+            <Button Classes="profile" Command="{ReflectionBinding $parent[UserControl].DataContext.SelectCommand}" CommandParameter="{Binding}">
+              <StackPanel Spacing="12" Width="150">
+                <Panel HorizontalAlignment="Center">
+                  <Border Classes="avatar">
+                    <ctl:ProfileAvatar Profile="{Binding}" />
+                  </Border>
+                  <Border Width="40" Height="40" CornerRadius="20" Background="#99000000" HorizontalAlignment="Center" VerticalAlignment="Center"
+                          IsVisible="{ReflectionBinding $parent[UserControl].DataContext.IsManaging}">
+                    <TextBlock Classes="icon" Text="&#xE70F;" FontSize="16" Foreground="White" />
+                  </Border>
+                </Panel>
+                <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="SemiBold" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="icon" Text="&#xE72E;" FontSize="13" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" IsVisible="{Binding HasPassword}" />
+                <Border Classes="badge accent" HorizontalAlignment="Center" IsVisible="{Binding IsKid}">
+                  <TextBlock Text="{l:Tr Profile.Kid}" />
+                </Border>
+              </StackPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+        <Button Classes="soft" Command="{Binding AddCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Classes="icon" Text="&#xE710;" FontSize="13" />
+            <TextBlock Text="{l:Tr Profile.Add}" />
+          </StackPanel>
+        </Button>
+        <ToggleButton Classes="soft" IsChecked="{Binding IsManaging}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Classes="icon" Text="&#xE70F;" FontSize="13" />
+            <TextBlock Text="{l:Tr Profile.Manage}" />
+          </StackPanel>
+        </ToggleButton>
+      </StackPanel>
+    </StackPanel>
+    <Button Classes="icon" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,64,28,0" Command="{Binding CloseCommand}"
+            IsVisible="{Binding CanClose}" ToolTip.Tip="{l:Tr Ui.Annuler}">
+      <TextBlock Classes="icon" Text="&#xE711;" FontSize="13" />
+    </Button>
+  </Grid>
+</UserControl>

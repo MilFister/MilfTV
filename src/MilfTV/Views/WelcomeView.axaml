@@ -1,0 +1,72 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:ctl="using:MilfTV.Controls"
+             x:Class="MilfTV.Views.WelcomeView"
+             x:DataType="vm:WelcomeViewModel">
+  <UserControl.Styles>
+    <Style Selector="Button.choice">
+      <Setter Property="Width" Value="250" />
+      <Setter Property="Height" Value="210" />
+      <Setter Property="Padding" Value="22" />
+      <Setter Property="CornerRadius" Value="18" />
+      <Setter Property="Background" Value="{DynamicResource Surface}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="VerticalContentAlignment" Value="Top" />
+    </Style>
+    <Style Selector="Button.choice:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Panel>
+  <ComboBox ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguage}" Width="230"
+            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,24,0" />
+  <ScrollViewer>
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="28" Margin="40">
+      <ctl:LogoMark Width="88" Height="88" HorizontalAlignment="Center" />
+      <StackPanel Spacing="8">
+        <TextBlock Classes="display" Text="{l:Tr Ui.BienvenueSurMilftv}" HorizontalAlignment="Center" />
+        <TextBlock Classes="muted" FontSize="16" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="620"
+                   Text="{l:Tr Ui.AjoutezVotreAbonnementIptvPour}" />
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" Spacing="18" HorizontalAlignment="Center">
+        <Button Classes="choice" Command="{Binding AddCommand}" CommandParameter="xtream">
+          <StackPanel Spacing="12">
+            <Border Width="48" Height="48" CornerRadius="14" Background="{DynamicResource AccentSoft}" HorizontalAlignment="Left">
+              <TextBlock Classes="icon" Text="&#xE968;" FontSize="22" Foreground="{DynamicResource Accent}" />
+            </Border>
+            <TextBlock Classes="h3" Text="{l:Tr Ui.CompteXtreamCodes}" FontSize="16" />
+            <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.ServeurIdentifiantEtMotDe}" />
+            <Border Classes="badge accent" HorizontalAlignment="Left">
+              <TextBlock Text="{l:Tr Ui.Recommande}" />
+            </Border>
+          </StackPanel>
+        </Button>
+        <Button Classes="choice" Command="{Binding AddCommand}" CommandParameter="m3u">
+          <StackPanel Spacing="12">
+            <Border Width="48" Height="48" CornerRadius="14" Background="{DynamicResource AccentSoft}" HorizontalAlignment="Left">
+              <TextBlock Classes="icon" Text="&#xE8A5;" FontSize="22" Foreground="{DynamicResource Accent}" />
+            </Border>
+            <TextBlock Classes="h3" Text="{l:Tr Ui.PlaylistM3u}" FontSize="16" />
+            <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.UnLienM3uM3u8Ou}" />
+          </StackPanel>
+        </Button>
+        <Button Classes="choice" Command="{Binding AddCommand}" CommandParameter="stalker">
+          <StackPanel Spacing="12">
+            <Border Width="48" Height="48" CornerRadius="14" Background="{DynamicResource AccentSoft}" HorizontalAlignment="Left">
+              <TextBlock Classes="icon" Text="&#xE7F4;" FontSize="22" Foreground="{DynamicResource Accent}" />
+            </Border>
+            <TextBlock Classes="h3" Text="{l:Tr Ui.PortailMac}" FontSize="16" />
+            <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.AdresseDuPortailStalkerMinistra}" />
+          </StackPanel>
+        </Button>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+  </Panel>
+</UserControl>

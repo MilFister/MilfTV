@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:l="using:MilfTV.Localization"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:img="using:MilfTV.Images"
+             x:Class="MilfTV.Views.PosterCard"
+             x:DataType="core:CatalogItem">
+  <StackPanel Spacing="8">
+    <Border x:Name="PosterBorder" Classes="poster" Height="240">
+      <Panel>
+        <StackPanel VerticalAlignment="Center" Margin="12" Spacing="8">
+          <TextBlock Text="{Binding Initials}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PlaceholderText}" HorizontalAlignment="Center" />
+          <TextBlock Text="{Binding Name, Converter={x:Static ctl:Conv.PosterTitle}}" TextWrapping="Wrap" TextAlignment="Center" FontSize="12"
+                     Foreground="{DynamicResource PlaceholderText}" MaxLines="3" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="320" Stretch="UniformToFill" />
+        <!-- Déjà vu : léger voile et pastille « VU » -->
+        <Border Background="#40000000" IsVisible="{Binding IsWatched}" IsHitTestVisible="False" />
+        <Border CornerRadius="7" Padding="6,3,8,3" Background="{DynamicResource Success}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                IsVisible="{Binding IsWatched}" ToolTip.Tip="{l:Tr MyList.Watched}">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Classes="icon" Text="&#xE73E;" FontSize="10" Foreground="White" VerticalAlignment="Center" />
+            <TextBlock Text="{l:Tr Badge.Watched}" FontSize="10.5" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+        <Border CornerRadius="7" Padding="7,3" Background="{DynamicResource Accent}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                IsVisible="{Binding IsInProgress}">
+          <TextBlock Text="{l:Tr Badge.InProgress}" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource OnAccent}" />
+        </Border>
+        <ProgressBar Classes="thin" Value="{Binding WatchProgress}" Maximum="100" VerticalAlignment="Bottom" CornerRadius="0" Height="4" Background="#66000000"
+                     IsVisible="{Binding WatchProgress, Converter={x:Static ctl:Conv.ProgressVisible}}" />
+        <Border Classes="hoverPlay" Background="#59000000">
+          <Border Width="54" Height="54" CornerRadius="27" Background="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Classes="icon" Text="&#xE768;" FontSize="20" Foreground="{DynamicResource OnAccent}" Margin="3,0,0,0" />
+          </Border>
+        </Border>
+        <Border Width="28" Height="28" CornerRadius="14" Background="#99000000" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"
+                IsVisible="{Binding IsFavorite}">
+          <TextBlock Classes="icon" Text="&#xEB52;" FontSize="12" Foreground="{DynamicResource Accent}" />
+        </Border>
+        <Border CornerRadius="7" Padding="7,3" Background="#B3000000" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8"
+                IsVisible="{Binding Badge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding Badge}" FontSize="11" FontWeight="SemiBold" Foreground="#FFD24D" />
+        </Border>
+      </Panel>
+    </Border>
+    <StackPanel Spacing="1" Margin="2,0">
+      <TextBlock Text="{Binding Name, Converter={x:Static ctl:Conv.PosterTitle}}" FontWeight="SemiBold" FontSize="13.5" TextTrimming="CharacterEllipsis" />
+      <TextBlock Text="{Binding SubLabel}" Classes="faint" FontSize="12" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>

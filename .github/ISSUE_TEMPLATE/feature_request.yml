@@ -1,0 +1,24 @@
+name: Feature request / Suggestion
+description: Suggest an idea or an improvement. / Proposez une idée ou une amélioration.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        You can write in English or in French. / Vous pouvez écrire en français ou en anglais.
+  - type: textarea
+    id: need
+    attributes:
+      label: What would you like? / Que souhaitez-vous ?
+      description: Describe the feature and the problem it solves. / Décrivez la fonction et le problème qu'elle résout.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives / Autres solutions envisagées
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context / Contexte
+      description: Screenshots, examples from other apps… / Captures d'écran, exemples d'autres applications…

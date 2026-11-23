@@ -1,0 +1,68 @@
+name: Bug report / Signaler un bug
+description: Something does not work as expected. / Quelque chose ne fonctionne pas comme prévu.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! You can write in English or in French.
+        Merci de prendre le temps de signaler un bug ! Vous pouvez écrire en français ou en anglais.
+
+        **Never post your IPTV server address, username or password.** / **Ne publiez jamais l'adresse, l'identifiant ou le mot de passe de votre serveur IPTV.**
+  - type: input
+    id: version
+    attributes:
+      label: MilfTV version / Version de MilfTV
+      description: Settings › Data and about (bottom of the page). / Paramètres › Données et à propos (en bas de la page).
+      placeholder: 1.0.0-beta.1
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation
+      options:
+        - Installer / Programme d'installation (Setup.exe)
+        - Portable version / Version portable (zip)
+        - Built from source / Compilé depuis les sources
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and graphics card / Version de Windows et carte graphique
+      placeholder: Windows 11 24H2, NVIDIA GeForce RTX 3060
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source type / Type de source
+      options:
+        - Xtream Codes
+        - M3U / M3U8
+        - MAC / Stalker portal
+        - Not related to a source / Sans rapport avec une source
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Que s'est-il passé ?
+      description: What did you do, what did you expect, what happened instead? / Ce que vous avez fait, ce que vous attendiez, ce qui s'est passé.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Étapes pour reproduire
+      placeholder: |
+        1. Open Live TV / Ouvrir TV en direct
+        2. Play a channel / Lancer une chaîne
+        3. ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log / Journal
+      description: |
+        Settings › Data and about › Open logs folder, then paste the end of `milftv.log`. Check it first: it may contain your server address.
+        Paramètres › Données et à propos › Ouvrir le dossier des journaux, puis collez la fin de `milftv.log`. Relisez-le avant : il peut contenir l'adresse de votre serveur.
+      render: text

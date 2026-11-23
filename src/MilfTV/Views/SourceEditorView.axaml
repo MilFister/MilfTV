@@ -1,0 +1,121 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:ctl="using:MilfTV.Controls"
+             x:Class="MilfTV.Views.SourceEditorView"
+             x:DataType="vm:SourceEditorViewModel">
+  <Border Classes="card" Width="600" Padding="28" Background="{DynamicResource SurfaceRaised}" BoxShadow="0 24 60 0 #66000000">
+    <StackPanel Spacing="16">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="h2" Text="{Binding DialogTitle}" />
+        <Button Grid.Column="1" Classes="icon" Command="{Binding CancelCommand}">
+          <TextBlock Classes="icon" Text="&#xE711;" FontSize="12" />
+        </Button>
+      </Grid>
+
+      <!-- Type de source -->
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <RadioButton Classes="chip" GroupName="kind" Content="Xtream Codes" IsChecked="{Binding IsXtream, Mode=OneWay}"
+                     Command="{Binding SetKindCommand}" CommandParameter="xtream" />
+        <RadioButton Classes="chip" GroupName="kind" Content="{l:Tr Ui.PlaylistM3u}" IsChecked="{Binding IsM3u, Mode=OneWay}"
+                     Command="{Binding SetKindCommand}" CommandParameter="m3u" />
+        <RadioButton Classes="chip" GroupName="kind" Content="{l:Tr Ui.PortailMac}" IsChecked="{Binding IsStalker, Mode=OneWay}"
+                     Command="{Binding SetKindCommand}" CommandParameter="stalker" />
+      </StackPanel>
+
+      <StackPanel Spacing="6">
+        <TextBlock Classes="caption" Text="{l:Tr Ui.NomFacultatif}" />
+        <TextBox Text="{Binding Name}" Watermark="{l:Tr Ui.MonAbonnement}" />
+      </StackPanel>
+
+      <StackPanel Spacing="6">
+        <TextBlock Classes="caption" Text="{Binding UrlLabel}" />
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBox Text="{Binding Url}" Watermark="{Binding UrlWatermark}" />
+          <Button Grid.Column="1" Classes="soft" Margin="8,0,0,0" Content="{l:Tr Ui.Parcourir}" IsVisible="{Binding IsM3u}" Click="OnBrowseClick" />
+        </Grid>
+        <Border CornerRadius="10" Padding="12,10" Background="{DynamicResource AccentSofter}" BorderBrush="{DynamicResource AccentSoft}" BorderThickness="1"
+                IsVisible="{Binding XtreamLinkDetected}">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock TextWrapping="Wrap" FontSize="13" VerticalAlignment="Center"
+                       Text="{l:Tr Ui.CeLienProvientDUn}" />
+            <Button Grid.Column="1" Classes="accent" Padding="12,7" Margin="10,0,0,0" Content="{l:Tr Ui.Convertir}" Command="{Binding ConvertToXtreamCommand}" />
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <Grid ColumnDefinitions="*,12,*" IsVisible="{Binding IsXtream}">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="caption" Text="{l:Tr Ui.Identifiant}" />
+          <TextBox Text="{Binding Username}" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="6">
+          <TextBlock Classes="caption" Text="{l:Tr Ui.MotDePasse}" />
+          <TextBox Text="{Binding Password}" PasswordChar="●" RevealPassword="False" />
+        </StackPanel>
+      </Grid>
+
+      <StackPanel Spacing="6" IsVisible="{Binding IsStalker}">
+        <TextBlock Classes="caption" Text="{l:Tr Ui.AdresseMac}" />
+        <TextBox Text="{Binding Mac}" Watermark="00:1A:79:12:34:56" FontFamily="Cascadia Mono, Consolas" />
+      </StackPanel>
+
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock Text="{l:Tr Source.ShareTitle}" FontWeight="SemiBold" />
+          <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Source.ShareHint}" />
+        </StackPanel>
+        <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsShared}" OnContent="" OffContent="" VerticalAlignment="Center" />
+      </Grid>
+
+      <ToggleButton Classes="flat" IsChecked="{Binding ShowAdvanced}" Padding="0" HorizontalAlignment="Left">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <TextBlock Classes="icon" Text="&#xE70D;" FontSize="10" Foreground="{DynamicResource TextSecondary}" />
+          <TextBlock Classes="muted" Text="{l:Tr Ui.OptionsAvanceesGuideTvUser}" FontSize="13" />
+        </StackPanel>
+      </ToggleButton>
+      <StackPanel Spacing="12" IsVisible="{Binding ShowAdvanced}">
+        <StackPanel Spacing="6">
+          <TextBlock Classes="caption" Text="{l:Tr Ui.LienDuGuideTvXmltv}" />
+          <TextBox Text="{Binding EpgUrl}" Watermark="http://example.com/epg.xml.gz" />
+        </StackPanel>
+        <StackPanel Spacing="6">
+          <TextBlock Classes="caption" Text="{l:Tr Ui.UserAgentHttpSiVotre}" />
+          <TextBox Text="{Binding UserAgent}" Watermark="{l:Tr Ui.ParDefaut}" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- État -->
+      <Border CornerRadius="10" Padding="12,10" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"
+              IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Arc Classes="spinner small" IsVisible="{Binding IsBusy}" />
+          <TextBlock Classes="icon" Text="&#xE73E;" Foreground="{DynamicResource Success}" FontSize="14">
+            <TextBlock.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="StatusOk" />
+                <Binding Path="!IsBusy" />
+              </MultiBinding>
+            </TextBlock.IsVisible>
+          </TextBlock>
+          <TextBlock Classes="icon" Text="&#xE7BA;" Foreground="{DynamicResource Danger}" FontSize="14">
+            <TextBlock.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="!StatusOk" />
+                <Binding Path="!IsBusy" />
+              </MultiBinding>
+            </TextBlock.IsVisible>
+          </TextBlock>
+          <TextBlock Text="{Binding Status}" TextWrapping="Wrap" MaxWidth="480" FontSize="13" />
+        </StackPanel>
+      </Border>
+
+      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,6,0,0">
+        <Button Classes="soft" Content="{l:Tr Ui.TesterLaConnexion}" Command="{Binding TestCommand}" IsEnabled="{Binding !IsBusy}" HorizontalAlignment="Left" />
+        <Button Grid.Column="1" Classes="flat" Content="{l:Tr Ui.Annuler}" Command="{Binding CancelCommand}" Margin="0,0,8,0" />
+        <Button Grid.Column="2" Classes="accent" Content="{l:Tr Ui.Enregistrer}" Command="{Binding SaveCommand}" IsEnabled="{Binding !IsBusy}" />
+      </Grid>
+    </StackPanel>
+  </Border>
+</UserControl>

@@ -1,0 +1,108 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:v="using:MilfTV.Views"
+             x:Class="MilfTV.Views.VodBrowserView"
+             x:DataType="vm:VodBrowserViewModel">
+  <Grid ColumnDefinitions="270,*" Margin="16,4,0,0">
+
+    <!-- ── Catégories ── -->
+    <Border Classes="panel" Padding="10,14,6,10" Margin="0,0,0,16">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="6,0,8,8">
+          <TextBlock Classes="h3" Text="{l:Tr Ui.Categories}" />
+          <TextBox Text="{Binding CategoryFilter}" Watermark="{l:Tr Ui.Filtrer}" MinHeight="34" Padding="10,6" />
+        </StackPanel>
+        <ListBox Classes="clean" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="core:Category">
+              <Grid ColumnDefinitions="*,Auto,Auto" Background="Transparent">
+                <Grid.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="{l:Tr Ui.VerrouillerDeverrouillerControleParental}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.ToggleCategoryLockCommand}" CommandParameter="{Binding}" />
+                  </ContextMenu>
+                </Grid.ContextMenu>
+                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontSize="13.5" />
+                <TextBlock Grid.Column="1" Classes="icon" Text="&#xE72E;" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="6,0,0,0" IsVisible="{Binding IsLocked}" />
+                <TextBlock Grid.Column="2" Text="{Binding Count, Converter={x:Static ctl:Conv.Count}}" Classes="faint" FontSize="12" Margin="8,0,2,0" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <!-- ── Grille ── -->
+    <DockPanel Grid.Column="1">
+      <!-- En-tête sur deux lignes : le titre de la catégorie n'est jamais tronqué par les outils, même en fenêtre étroite. -->
+      <StackPanel DockPanel.Dock="Top" Margin="24,4,24,14" Spacing="12">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Classes="h1" Text="{Binding SelectedCategory.Name, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
+            <TextBlock Classes="muted" Text="{Binding CountText}" Margin="1,2,0,0" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+            <Button Classes="icon" ToolTip.Tip="{l:Tr Ui.PetitesAffiches}" Command="{Binding SetPosterSizeCommand}" CommandParameter="0">
+              <TextBlock Classes="icon" Text="&#xE80A;" FontSize="12" />
+            </Button>
+            <Button Classes="icon" ToolTip.Tip="{l:Tr Ui.GrandesAffiches}" Command="{Binding SetPosterSizeCommand}" CommandParameter="2">
+              <TextBlock Classes="icon" Text="&#xF0E2;" FontSize="15" />
+            </Button>
+          </StackPanel>
+        </Grid>
+        <WrapPanel ItemSpacing="10" LineSpacing="10">
+          <Panel Width="260">
+            <TextBox Text="{Binding Filter}" Watermark="{l:Tr Ui.ChercherDansLaListe}" Padding="34,8,12,8" />
+            <TextBlock Classes="icon" Text="&#xE721;" FontSize="13" HorizontalAlignment="Left" Margin="12,0,0,0" Foreground="{DynamicResource TextMuted}" IsHitTestVisible="False" />
+          </Panel>
+          <ComboBox ItemsSource="{Binding WatchFilterOptions}" SelectedItem="{Binding SelectedWatchFilter}" Width="170" ToolTip.Tip="{l:Tr Vod.WatchFilter}" />
+          <ComboBox ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort}" Width="180" />
+        </WrapPanel>
+      </StackPanel>
+      <Panel>
+        <!-- Marges sur la grille elle-même (pas en Padding du ScrollViewer) : sinon la largeur disponible
+             n'en tient pas compte et la dernière colonne d'affiches est coupée à droite. -->
+        <ScrollViewer x:Name="GridScroll">
+          <ItemsRepeater x:Name="Repeater" ItemsSource="{Binding Items}" Margin="24,6,24,24">
+            <ItemsRepeater.Layout>
+              <UniformGridLayout MinItemWidth="172" MinItemHeight="320" MinRowSpacing="22" MinColumnSpacing="20" ItemsStretch="Uniform" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+              <DataTemplate x:DataType="core:CatalogItem">
+                <Button Classes="cardButton" VerticalAlignment="Top" Click="OnItemClick">
+                  <Button.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="{l:Tr Vod.PlayMenu}" Command="{ReflectionBinding $parent[UserControl].DataContext.PlayCommand}" CommandParameter="{Binding}" />
+                      <MenuItem Header="{l:Tr Ui.AjouterRetirerDesFavoris}" Command="{ReflectionBinding $parent[UserControl].DataContext.ToggleFavoriteCommand}" CommandParameter="{Binding}" />
+                      <MenuItem Header="{l:Tr MyList.MarkWatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}">
+                        <MenuItem.IsVisible>
+                          <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="!IsWatched" />
+                            <Binding Path="Kind" Converter="{x:Static ctl:Conv.Eq}" ConverterParameter="Movie" />
+                          </MultiBinding>
+                        </MenuItem.IsVisible>
+                      </MenuItem>
+                      <MenuItem Header="{l:Tr Vod.MarkUnwatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkUnwatchedCommand}" CommandParameter="{Binding}"
+                                IsVisible="{Binding IsWatched}" />
+                      <MenuItem Header="{l:Tr MyList.RemoveHistory}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkUnwatchedCommand}" CommandParameter="{Binding}"
+                                IsVisible="{Binding IsInProgress}" />
+                    </ContextMenu>
+                  </Button.ContextMenu>
+                  <v:PosterCard />
+                </Button>
+              </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+          </ItemsRepeater>
+        </ScrollViewer>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" IsVisible="{Binding IsEmpty}">
+          <TextBlock Classes="icon" Text="&#xE8B2;" FontSize="40" Foreground="{DynamicResource TextMuted}" />
+          <TextBlock Classes="muted" Text="{l:Tr Ui.RienAAfficherIci}" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Panel>
+    </DockPanel>
+  </Grid>
+</UserControl>

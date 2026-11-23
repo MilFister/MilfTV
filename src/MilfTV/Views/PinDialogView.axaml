@@ -1,0 +1,59 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             x:Class="MilfTV.Views.PinDialogView"
+             x:DataType="vm:PinDialogViewModel">
+  <UserControl.Styles>
+    <Style Selector="Button.key">
+      <Setter Property="Width" Value="72" />
+      <Setter Property="Height" Value="56" />
+      <Setter Property="CornerRadius" Value="16" />
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Background" Value="{DynamicResource Surface}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.key:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+    </Style>
+  </UserControl.Styles>
+  <Border Classes="card" Width="340" Padding="28" Background="{DynamicResource SurfaceRaised}" BoxShadow="0 24 60 0 #66000000">
+    <StackPanel Spacing="18">
+      <Border Width="56" Height="56" CornerRadius="28" Background="{DynamicResource AccentSoft}" HorizontalAlignment="Center">
+        <TextBlock Classes="icon" Text="&#xE72E;" FontSize="22" Foreground="{DynamicResource Accent}" />
+      </Border>
+      <StackPanel Spacing="4">
+        <TextBlock Classes="h3" FontSize="17" Text="{l:Tr Ui.ControleParental}" HorizontalAlignment="Center" />
+        <TextBlock Classes="muted" Text="{Binding Prompt}" HorizontalAlignment="Center" />
+      </StackPanel>
+      <TextBlock Text="{Binding Dots}" FontSize="30" LetterSpacing="12" HorizontalAlignment="Center" Foreground="{DynamicResource Accent}" />
+      <TextBlock Text="{Binding Error}" Foreground="{DynamicResource Danger}" HorizontalAlignment="Center"
+                 IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <StackPanel Spacing="10" HorizontalAlignment="Center">
+        <ItemsControl ItemsSource="{Binding Digits}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel Width="240" ItemSpacing="12" LineSpacing="10" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="x:String">
+              <Button Classes="key" Content="{Binding}" Command="{ReflectionBinding $parent[UserControl].DataContext.DigitCommand}" CommandParameter="{Binding}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Button Classes="key" Content="✕" Command="{Binding CancelCommand}" ToolTip.Tip="{l:Tr Ui.Annuler}" />
+          <Button Classes="key" Content="0" Command="{Binding DigitCommand}" CommandParameter="0" />
+          <Button Classes="key" Command="{Binding BackspaceCommand}" ToolTip.Tip="{l:Tr Ui.Effacer}">
+            <TextBlock Classes="icon" Text="&#xE750;" FontSize="18" />
+          </Button>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

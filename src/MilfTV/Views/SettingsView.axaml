@@ -1,0 +1,925 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:ctl="using:MilfTV.Controls"
+             x:Class="MilfTV.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <UserControl.Styles>
+    <!-- Carte regroupant des réglages -->
+    <Style Selector="Border.section">
+      <Setter Property="Background" Value="{DynamicResource Surface}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="18" />
+      <Setter Property="Padding" Value="22,16" />
+    </Style>
+    <Style Selector="TextBlock.group">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="LetterSpacing" Value="0.6" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+      <Setter Property="Margin" Value="4,0,0,8" />
+    </Style>
+    <Style Selector="Grid.setting">
+      <Setter Property="Margin" Value="0,9" />
+    </Style>
+    <Style Selector="Grid.setting > StackPanel:nth-child(1)">
+      <Setter Property="Margin" Value="0,0,20,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.sep">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Background" Value="{DynamicResource BorderSubtle}" />
+    </Style>
+    <Style Selector="Button.swatch">
+      <Setter Property="Padding" Value="10" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="Width" Value="96" />
+    </Style>
+    <Style Selector="Button.swatch:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+    </Style>
+    <Style Selector="Button.nav">
+      <Setter Property="Height" Value="40" />
+      <Setter Property="Margin" Value="0,1" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="268,*">
+    <!-- ═══════════ Menu des sections ═══════════ -->
+    <DockPanel Margin="20,4,8,16">
+      <TextBlock DockPanel.Dock="Top" Classes="h1" Text="{l:Tr Ui.Parametres}" Margin="6,0,0,14" />
+      <TextBox DockPanel.Dock="Top" Text="{Binding NavFilter}" Watermark="{l:Tr Settings.Search}" Margin="0,0,0,16">
+        <TextBox.InnerLeftContent>
+          <TextBlock Classes="icon" Text="&#xE721;" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0" />
+        </TextBox.InnerLeftContent>
+      </TextBox>
+      <ScrollViewer>
+        <StackPanel>
+          <TextBlock Classes="caption" Text="{l:Tr Settings.NoResult}" Margin="6,0,0,12" IsVisible="{Binding NoSectionFound}" />
+
+          <!-- Ce profil -->
+          <Grid ColumnDefinitions="Auto,*" Margin="4,0,0,8" IsVisible="{Binding ShowProfileGroup}">
+            <ctl:ProfileAvatar Width="26" Height="26" ProfileColor="{Binding ProfileColor}" Initial="{Binding ProfileInitial}" Avatar="{Binding ProfileAvatar}" />
+            <TextBlock Grid.Column="1" Classes="group" Margin="10,0,0,0" VerticalAlignment="Center" Text="{Binding ProfileGroupTitle}" TextTrimming="CharacterEllipsis" />
+          </Grid>
+          <ItemsControl ItemsSource="{Binding ProfileSections}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:SettingsNavEntry">
+                <Button Classes="nav" Classes.active="{Binding IsActive}" IsVisible="{Binding IsShown}" ToolTip.Tip="{Binding Hint}"
+                        Command="{ReflectionBinding $parent[UserControl].DataContext.SelectSectionCommand}" CommandParameter="{Binding Key}">
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="icon" Text="{Binding Icon}" FontSize="15" />
+                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- Application -->
+          <TextBlock Classes="group" Text="{l:Tr Settings.GroupApp}" Margin="4,22,0,8" IsVisible="{Binding ShowAppGroup}" />
+          <ItemsControl ItemsSource="{Binding AppSections}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:SettingsNavEntry">
+                <Button Classes="nav" Classes.active="{Binding IsActive}" IsVisible="{Binding IsShown}" ToolTip.Tip="{Binding Hint}"
+                        Command="{ReflectionBinding $parent[UserControl].DataContext.SelectSectionCommand}" CommandParameter="{Binding Key}">
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Classes="icon" Text="{Binding Icon}" FontSize="15" />
+                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <!-- Numéro de version : ouvre les notes de version -->
+          <Button Classes="flat" Padding="6,4" Margin="0,18,0,0" HorizontalAlignment="Left" Command="{Binding Main.ShowChangelogCommand}" ToolTip.Tip="{l:Tr Changelog.Title}">
+            <TextBlock Classes="faint" Text="{Binding Version}" FontSize="12" />
+          </Button>
+        </StackPanel>
+      </ScrollViewer>
+    </DockPanel>
+
+    <!-- ═══════════ Contenu de la section ═══════════ -->
+    <ScrollViewer Grid.Column="1" Name="ContentScroll">
+      <StackPanel Margin="20,4,32,40" Spacing="16" MaxWidth="880" HorizontalAlignment="Left">
+        <StackPanel Spacing="4" Margin="0,4,0,6">
+          <TextBlock Classes="h2" FontSize="24" Text="{Binding SectionTitle}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap" Text="{Binding SectionHint}" />
+        </StackPanel>
+
+        <!-- ─────────── Mon profil ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=profile}">
+          <Border Classes="section" Padding="24">
+            <Grid ColumnDefinitions="Auto,*">
+              <ctl:ProfileAvatar Width="88" Height="88" VerticalAlignment="Center" ProfileColor="{Binding ProfileColor}" Initial="{Binding ProfileInitial}" Avatar="{Binding ProfileAvatar}" />
+              <StackPanel Grid.Column="1" Margin="22,0,0,0" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Classes="h2" Text="{Binding ProfileName}" />
+                <WrapPanel ItemSpacing="8" LineSpacing="6">
+                  <Border Classes="badge accent" IsVisible="{Binding ProfileIsKid}">
+                    <TextBlock Text="{l:Tr Profile.Kid}" />
+                  </Border>
+                  <Border Classes="badge" IsVisible="{Binding ProfileHasPassword}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <TextBlock Classes="icon" Text="&#xE72E;" FontSize="10" />
+                      <TextBlock Text="{l:Tr Settings.PasswordOn}" />
+                    </StackPanel>
+                  </Border>
+                </WrapPanel>
+                <TextBlock Classes="caption" Text="{Binding ProfileStats}" />
+                <WrapPanel ItemSpacing="10" LineSpacing="10" Margin="0,6,0,0">
+                  <Button Classes="accent" Command="{Binding EditProfileCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Classes="icon" Text="&#xE70F;" FontSize="12" Foreground="{DynamicResource OnAccent}" />
+                      <TextBlock Text="{l:Tr Settings.EditProfile}" Foreground="{DynamicResource OnAccent}" />
+                    </StackPanel>
+                  </Button>
+                  <Button Classes="soft" Command="{Binding SwitchProfileCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Classes="icon" Text="&#xE748;" FontSize="12" />
+                      <TextBlock Text="{l:Tr Settings.SwitchProfile}" />
+                    </StackPanel>
+                  </Button>
+                </WrapPanel>
+              </StackPanel>
+            </Grid>
+          </Border>
+          <Border Classes="section">
+            <StackPanel Spacing="2">
+              <TextBlock Classes="h3" Text="{l:Tr Settings.ProfileShortcuts}" Margin="0,4,0,6" />
+              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="12,10" Command="{Binding SelectSectionCommand}" CommandParameter="home">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <TextBlock Classes="icon" Text="&#xE80F;" FontSize="14" Foreground="{DynamicResource Accent}" />
+                  <StackPanel Grid.Column="1" Margin="14,0">
+                    <TextBlock Text="{l:Tr Settings.Nav.home}" FontWeight="SemiBold" />
+                    <TextBlock Classes="caption" Text="{l:Tr Settings.Nav.home.Hint}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Classes="icon" Text="&#xE76C;" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                </Grid>
+              </Button>
+              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="12,10" Command="{Binding SelectSectionCommand}" CommandParameter="history">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <TextBlock Classes="icon" Text="&#xE81C;" FontSize="14" Foreground="{DynamicResource Accent}" />
+                  <StackPanel Grid.Column="1" Margin="14,0">
+                    <TextBlock Text="{l:Tr Settings.Nav.history}" FontWeight="SemiBold" />
+                    <TextBlock Classes="caption" Text="{l:Tr Settings.Nav.history.Hint}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Classes="icon" Text="&#xE76C;" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                </Grid>
+              </Button>
+              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="12,10" Command="{Binding SelectSectionCommand}" CommandParameter="autoplay">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <TextBlock Classes="icon" Text="&#xE768;" FontSize="14" Foreground="{DynamicResource Accent}" />
+                  <StackPanel Grid.Column="1" Margin="14,0">
+                    <TextBlock Text="{l:Tr Settings.Nav.autoplay}" FontWeight="SemiBold" />
+                    <TextBlock Classes="caption" Text="{l:Tr Settings.Nav.autoplay.Hint}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Classes="icon" Text="&#xE76C;" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                </Grid>
+              </Button>
+              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="12,10" Command="{Binding SelectSectionCommand}" CommandParameter="previews">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <TextBlock Classes="icon" Text="&#xE714;" FontSize="14" Foreground="{DynamicResource Accent}" />
+                  <StackPanel Grid.Column="1" Margin="14,0">
+                    <TextBlock Text="{l:Tr Settings.Nav.previews}" FontWeight="SemiBold" />
+                    <TextBlock Classes="caption" Text="{l:Tr Settings.Nav.previews.Hint}" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Classes="icon" Text="&#xE76C;" FontSize="11" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                </Grid>
+              </Button>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Apparence et langue ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=appearance}">
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.Language}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.LanguageHint}" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding LanguageOptions}" SelectedItem="{Binding SelectedLanguage}" Width="260" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" Margin="0,6" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.Mode}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.ModeHint}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                  <RadioButton Classes="chip" GroupName="mode" Content="{l:Tr Ui.Systeme}" Command="{Binding SetThemeModeCommand}" CommandParameter="System"
+                               IsChecked="{Binding ThemeMode, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=System, Mode=OneWay}" />
+                  <RadioButton Classes="chip" GroupName="mode" Content="{l:Tr Ui.Clair}" Command="{Binding SetThemeModeCommand}" CommandParameter="Light"
+                               IsChecked="{Binding ThemeMode, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=Light, Mode=OneWay}" />
+                  <RadioButton Classes="chip" GroupName="mode" Content="{l:Tr Ui.Sombre}" Command="{Binding SetThemeModeCommand}" CommandParameter="Dark"
+                               IsChecked="{Binding ThemeMode, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=Dark, Mode=OneWay}" />
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel Spacing="10">
+              <StackPanel>
+                <TextBlock Text="{l:Tr Ui.Couleur}" FontWeight="SemiBold" />
+                <TextBlock Classes="caption" Text="{Binding ColorTheme.Name, Converter={x:Static l:Loc.Format}, ConverterParameter=Settings.CurrentTheme}" />
+              </StackPanel>
+              <ItemsControl ItemsSource="{Binding Themes}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate><WrapPanel ItemSpacing="6" LineSpacing="6" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ThemeChoice">
+                    <Button Classes="swatch" Command="{ReflectionBinding $parent[UserControl].DataContext.SetColorThemeCommand}" CommandParameter="{Binding}">
+                      <StackPanel Spacing="8" HorizontalAlignment="Center">
+                        <Border Width="44" Height="44" CornerRadius="22" Background="{Binding Theme.Swatch}" HorizontalAlignment="Center" BoxShadow="0 4 12 0 #33000000">
+                          <TextBlock Classes="icon" Text="&#xE73E;" FontSize="16" Foreground="White" IsVisible="{Binding IsSelected}" />
+                        </Border>
+                        <TextBlock Text="{Binding Theme.Name}" FontSize="12.5" HorizontalAlignment="Center" />
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <Grid Classes="setting" ColumnDefinitions="*,Auto">
+              <StackPanel>
+                <TextBlock Text="{l:Tr Ui.TailleDesAffiches}" FontWeight="SemiBold" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.PosterSizeHint}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <RadioButton Classes="chip" GroupName="poster" Content="{l:Tr Ui.Petites}" IsChecked="{Binding PosterSize, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=0, Mode=OneWay}" Click="OnPosterSize0" />
+                <RadioButton Classes="chip" GroupName="poster" Content="{l:Tr Ui.Moyennes}" IsChecked="{Binding PosterSize, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=1, Mode=OneWay}" Click="OnPosterSize1" />
+                <RadioButton Classes="chip" GroupName="poster" Content="{l:Tr Ui.Grandes}" IsChecked="{Binding PosterSize, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=2, Mode=OneWay}" Click="OnPosterSize2" />
+              </StackPanel>
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Tableau de bord ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=home}">
+          <Border Classes="section" Padding="12,10">
+            <ItemsControl ItemsSource="{Binding DashRows}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:DashRowItem">
+                  <Border CornerRadius="12" Padding="10,4" Margin="0,2" Background="{DynamicResource AppBgAlt}">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                      <TextBlock Classes="icon" Text="&#xE76F;" FontSize="13" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="2,0,12,0" />
+                      <CheckBox Grid.Column="1" IsChecked="{Binding IsVisible}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Label}" FontWeight="Medium" />
+                      </CheckBox>
+                      <Button Grid.Column="2" Classes="icon" IsEnabled="{Binding !IsFirst}" ToolTip.Tip="{l:Tr Settings.MoveUp}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.MoveRowUpCommand}" CommandParameter="{Binding}">
+                        <TextBlock Classes="icon" Text="&#xE70E;" FontSize="12" />
+                      </Button>
+                      <Button Grid.Column="3" Classes="icon" IsEnabled="{Binding !IsLast}" ToolTip.Tip="{l:Tr Settings.MoveDown}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.MoveRowDownCommand}" CommandParameter="{Binding}">
+                        <TextBlock Classes="icon" Text="&#xE70D;" FontSize="12" />
+                      </Button>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Border>
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Classes="caption" TextWrapping="Wrap" VerticalAlignment="Center" Text="{l:Tr Settings.DashHint}" Margin="4,0,16,0" />
+            <Button Grid.Column="1" Classes="soft" Command="{Binding ResetDashboardCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Classes="icon" Text="&#xE777;" FontSize="12" />
+                <TextBlock Text="{l:Tr Settings.Reset}" />
+              </StackPanel>
+            </Button>
+          </Grid>
+        </StackPanel>
+
+        <!-- ─────────── Historique et suggestions ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=history}">
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.TrackHistory}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.TrackHistoryHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding TrackHistory}" OnContent="" OffContent="" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto" IsEnabled="{Binding TrackHistory}">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.Resume}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.ResumeHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding ResumePlayback}" OnContent="" OffContent="" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto,Auto" IsEnabled="{Binding TrackHistory}">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.WatchedThreshold}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.WatchedThresholdHint}" />
+                </StackPanel>
+                <Slider Grid.Column="1" Width="200" Minimum="70" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                        Value="{Binding WatchedThreshold}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Width="52" TextAlignment="Right" FontWeight="SemiBold" VerticalAlignment="Center"
+                           Text="{Binding WatchedThreshold, StringFormat='{}{0} %'}" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.Suggestions}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.SuggestionsHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding SuggestionsFromHistory}" OnContent="" OffContent="" />
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="h3" Text="{l:Tr Settings.DangerZone}" />
+              <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.DangerZoneHint}" />
+              <WrapPanel ItemSpacing="10" LineSpacing="10">
+                <Button Classes="danger" Content="{l:Tr Settings.ClearHistory}" Command="{Binding ClearHistoryCommand}" />
+                <Button Classes="danger" Content="{l:Tr Settings.ClearMyList}" Command="{Binding ClearMyListCommand}" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Lecture automatique ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=autoplay}">
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.AutoPlayNext}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.AutoPlayNextHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoPlayNext}" OnContent="" OffContent="" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto,Auto" IsEnabled="{Binding AutoPlayNext}">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.AutoPlayCountdown}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.AutoPlayCountdownHint}" />
+                </StackPanel>
+                <Slider Grid.Column="1" Width="200" Minimum="3" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True"
+                        Value="{Binding AutoPlayCountdown}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Width="52" TextAlignment="Right" FontWeight="SemiBold" VerticalAlignment="Center"
+                           Text="{Binding AutoPlayCountdown, StringFormat='{}{0} s'}" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto" IsEnabled="{Binding AutoPlayNext}">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.AutoPlayMax}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.AutoPlayMaxHint}" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding AutoPlayMaxChoices}" SelectedItem="{Binding AutoPlayMaxEpisodes}" Width="200" VerticalAlignment="Center" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Aperçus et bandes-annonces ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=previews}">
+          <Border Classes="section" IsVisible="{Binding !HasTmdbKey}" BorderBrush="{DynamicResource Accent}">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <TextBlock Classes="icon" Text="&#xE946;" FontSize="18" Foreground="{DynamicResource Accent}" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Margin="14,0" TextWrapping="Wrap" VerticalAlignment="Center" Text="{l:Tr Settings.TmdbNeeded}" />
+              <Button Grid.Column="2" Classes="soft" Content="{l:Tr Settings.GoToTmdb}" Command="{Binding SelectSectionCommand}" CommandParameter="tmdb" />
+            </Grid>
+          </Border>
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.HoverPreview}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.HoverPreviewHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding HoverPreview}" OnContent="" OffContent="" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto,Auto" IsEnabled="{Binding HoverPreview}">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.HoverDelay}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.HoverDelayHint}" />
+                </StackPanel>
+                <Slider Grid.Column="1" Width="200" Minimum="0.5" Maximum="3" TickFrequency="0.25" IsSnapToTickEnabled="True"
+                        Value="{Binding HoverDelaySeconds}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Width="52" TextAlignment="Right" FontWeight="SemiBold" VerticalAlignment="Center" Text="{Binding HoverDelayText}" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto" IsEnabled="{Binding HoverPreview}">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.PreviewSound}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.PreviewSoundHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding PreviewSound}" OnContent="" OffContent="" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.TrailerLanguage}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.TrailerLanguageHint}" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding TrailerLanguages}" SelectedItem="{Binding TrailerLanguage}" Width="240" VerticalAlignment="Center" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Sources IPTV ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=sources}">
+          <Border Classes="section">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="caption" Text="{l:Tr Settings.NoSources}" IsVisible="{Binding !HasSources}" Margin="0,4" />
+              <ItemsControl ItemsSource="{Binding SourceRows}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SourceRow">
+                    <Border CornerRadius="14" Padding="14,12" Margin="0,0,0,8" Background="{DynamicResource AppBgAlt}">
+                      <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Width="42" Height="42" CornerRadius="12" Background="{DynamicResource AccentSoft}" VerticalAlignment="Center">
+                          <TextBlock Classes="icon" Text="{Binding Kind, Converter={x:Static ctl:Conv.SourceGlyph}}" Foreground="{DynamicResource Accent}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center" Spacing="4">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Border Classes="badge accent" IsVisible="{Binding IsActive}">
+                              <TextBlock Text="{l:Tr Settings.ActiveSource}" />
+                            </Border>
+                          </StackPanel>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Classes="caption" Text="{Binding KindLabel}" VerticalAlignment="Center" />
+                            <Border Classes="badge">
+                              <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock Classes="icon" Text="&#xE72E;" FontSize="9" IsVisible="{Binding IsReadOnly}" />
+                                <TextBlock Text="{Binding Badge}" />
+                              </StackPanel>
+                            </Border>
+                          </StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                          <Button Classes="soft" Content="{l:Tr Settings.UseSource}" IsVisible="{Binding !IsActive}" Margin="0,0,6,0"
+                                  Command="{ReflectionBinding $parent[UserControl].DataContext.UseSourceCommand}" CommandParameter="{Binding}" />
+                          <Button Classes="icon" ToolTip.Tip="{l:Tr Ui.Modifier}" IsVisible="{Binding CanEdit}"
+                                  Command="{ReflectionBinding $parent[UserControl].DataContext.EditSourceCommand}" CommandParameter="{Binding}">
+                            <TextBlock Classes="icon" Text="&#xE70F;" FontSize="14" />
+                          </Button>
+                          <Button Classes="icon" ToolTip.Tip="{l:Tr Ui.Supprimer}" IsVisible="{Binding CanEdit}"
+                                  Command="{ReflectionBinding $parent[UserControl].DataContext.DeleteSourceCommand}" CommandParameter="{Binding}">
+                            <TextBlock Classes="icon" Text="&#xE74D;" FontSize="14" />
+                          </Button>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <Grid ColumnDefinitions="*,Auto">
+                <WrapPanel ItemSpacing="10" LineSpacing="10">
+                  <Button Classes="accent" Command="{Binding AddSourceCommand}" CommandParameter="xtream">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Classes="icon" Text="&#xE710;" FontSize="12" Foreground="{DynamicResource OnAccent}" />
+                      <TextBlock Text="{l:Tr Ui.CompteXtream}" Foreground="{DynamicResource OnAccent}" />
+                    </StackPanel>
+                  </Button>
+                  <Button Classes="soft" Command="{Binding AddSourceCommand}" CommandParameter="m3u" Content="{l:Tr Ui.PlaylistM3u}" />
+                  <Button Classes="soft" Command="{Binding AddSourceCommand}" CommandParameter="stalker" Content="{l:Tr Ui.PortailMac}" />
+                </WrapPanel>
+                <Button Grid.Column="1" Classes="flat" Command="{Binding RefreshCommand}" VerticalAlignment="Top">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Classes="icon" Text="&#xE72C;" FontSize="13" />
+                    <TextBlock Text="{l:Tr Ui.Actualiser}" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <Grid ColumnDefinitions="Auto,*">
+              <TextBlock Classes="icon" Text="&#xE716;" FontSize="18" Foreground="{DynamicResource Accent}" VerticalAlignment="Top" Margin="0,2,0,0" />
+              <TextBlock Grid.Column="1" Margin="14,0,0,0" Classes="muted" TextWrapping="Wrap" Text="{l:Tr Settings.SourcesHint}" />
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Lecture et vidéo ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=playback}">
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.DirectDiffere}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.DureeGardeeEnMemoireSur}" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding TimeshiftChoices}" SelectedItem="{Binding TimeshiftMinutes}" Width="180" VerticalAlignment="Center">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="x:Int32">
+                      <TextBlock Text="{Binding Converter={x:Static l:Loc.Format}, ConverterParameter=Settings.Minutes}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.AudioOutput}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.AudioOutputHint}" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding AudioOutputs}" SelectedItem="{Binding AudioOutput}" Width="300" VerticalAlignment="Center" />
+                <Button Grid.Column="2" Classes="icon" Margin="6,0,0,0" Command="{Binding RefreshAudioOutputsCommand}" VerticalAlignment="Center">
+                  <TextBlock Classes="icon" Text="&#xE72C;" FontSize="13" />
+                </Button>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.DecodageMateriel}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.UtiliseLaCarteGraphiquePour}" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding HwOptions}" SelectedItem="{Binding HwDecode}" Width="300" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.ImageHauteQualite}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.MiseALEchelleAvancee}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding HighQuality}" OnContent="" OffContent="" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.SmoothRendering}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.SmoothRenderingHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding SmoothRendering}" OnContent="" OffContent="" VerticalAlignment="Center" />
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.MiniOnBack}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.MiniOnBackHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding MiniPlayerOnBack}" OnContent="" OffContent="" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.MiniSize}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.MiniSizeHint}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                  <RadioButton Classes="chip" GroupName="minisize" Content="{l:Tr Settings.MiniSmall}" Command="{Binding SetMiniSizeCommand}" CommandParameter="0"
+                               IsChecked="{Binding MiniPlayerSize, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=0, Mode=OneWay}" />
+                  <RadioButton Classes="chip" GroupName="minisize" Content="{l:Tr Settings.MiniMedium}" Command="{Binding SetMiniSizeCommand}" CommandParameter="1"
+                               IsChecked="{Binding MiniPlayerSize, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=1, Mode=OneWay}" />
+                  <RadioButton Classes="chip" GroupName="minisize" Content="{l:Tr Settings.MiniLarge}" Command="{Binding SetMiniSizeCommand}" CommandParameter="2"
+                               IsChecked="{Binding MiniPlayerSize, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=2, Mode=OneWay}" />
+                  <Button Classes="flat" Content="{l:Tr Settings.MiniReset}" Command="{Binding ResetMiniCommand}" Margin="4,0,0,0" />
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.LanguesAudioPreferees}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.CodesSeparesParDesVirgules}" />
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding AudioLanguages}" Width="300" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.LanguesDesSousTitres}" FontWeight="SemiBold" />
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding SubtitleLanguages}" Width="300" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.AfficherLesSousTitresPar}" FontWeight="SemiBold" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding SubtitlesByDefault}" OnContent="" OffContent="" />
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <Grid Classes="setting" ColumnDefinitions="*,Auto">
+              <StackPanel>
+                <TextBlock Text="{l:Tr Ui.UserAgentParDefaut}" FontWeight="SemiBold" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.AModifierUniquementSiVotre}" />
+              </StackPanel>
+              <TextBox Grid.Column="1" Text="{Binding UserAgent}" Watermark="MilfTV/1.0 (Windows)" Width="300" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Enregistrements ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=recordings}">
+          <Border Classes="section">
+            <StackPanel>
+              <TextBlock Classes="h3" Text="{l:Tr Settings.RecGroupFile}" Margin="0,6,0,4" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.Dossier}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" Text="{Binding RecordingsFolder}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Classes="caption" Text="{Binding FreeSpaceText}" />
+                </StackPanel>
+                <Button Grid.Column="1" Classes="flat" Content="{l:Tr Settings.OpenFolder}" Command="{Binding OpenRecordingsFolderCommand}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <Button Grid.Column="2" Classes="soft" Content="{l:Tr Ui.Changer}" Click="OnBrowseFolder" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.RecFormat}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.RecFormatHint}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                  <RadioButton Classes="chip" GroupName="recfmt" Content="{l:Tr Settings.RecFormatTs}" Command="{Binding SetRecordingFormatCommand}" CommandParameter="ts"
+                               IsChecked="{Binding RecordingFormat, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=ts, Mode=OneWay}" />
+                  <RadioButton Classes="chip" GroupName="recfmt" Content="MKV" Command="{Binding SetRecordingFormatCommand}" CommandParameter="mkv"
+                               IsChecked="{Binding RecordingFormat, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=mkv, Mode=OneWay}" />
+                  <RadioButton Classes="chip" GroupName="recfmt" Content="MP4" Command="{Binding SetRecordingFormatCommand}" CommandParameter="mp4"
+                               IsChecked="{Binding RecordingFormat, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=mp4, Mode=OneWay}" />
+                </StackPanel>
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.RecQuality}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.RecQualityHint}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                  <RadioButton Classes="chip" GroupName="recq" Content="{l:Tr Settings.RecQualityBest}" Command="{Binding SetRecordingQualityCommand}" CommandParameter="best"
+                               IsChecked="{Binding RecordingQuality, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=best, Mode=OneWay}" />
+                  <RadioButton Classes="chip" GroupName="recq" Content="{l:Tr Settings.RecQualityMedium}" Command="{Binding SetRecordingQualityCommand}" CommandParameter="medium"
+                               IsChecked="{Binding RecordingQuality, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=medium, Mode=OneWay}" />
+                  <RadioButton Classes="chip" GroupName="recq" Content="{l:Tr Settings.RecQualityLow}" Command="{Binding SetRecordingQualityCommand}" CommandParameter="low"
+                               IsChecked="{Binding RecordingQuality, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=low, Mode=OneWay}" />
+                </StackPanel>
+              </Grid>
+              <Border Classes="sep" />
+              <StackPanel Margin="0,9" Spacing="8">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.RecName}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.RecNameHint}" />
+                </StackPanel>
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBox Text="{Binding RecordingNameTemplate}" />
+                  <Button Grid.Column="1" Classes="flat" Margin="6,0,0,0" Content="{l:Tr Settings.Reset}" Command="{Binding ResetNameTemplateCommand}" />
+                </Grid>
+                <WrapPanel ItemSpacing="6" LineSpacing="6">
+                  <Button Classes="soft" Padding="10,4" FontSize="12.5" Content="{}{titre}" Command="{Binding InsertNameTokenCommand}" CommandParameter="{}{titre}" />
+                  <Button Classes="soft" Padding="10,4" FontSize="12.5" Content="{}{chaine}" Command="{Binding InsertNameTokenCommand}" CommandParameter="{}{chaine}" />
+                  <Button Classes="soft" Padding="10,4" FontSize="12.5" Content="{}{date}" Command="{Binding InsertNameTokenCommand}" CommandParameter="{}{date}" />
+                  <Button Classes="soft" Padding="10,4" FontSize="12.5" Content="{}{heure}" Command="{Binding InsertNameTokenCommand}" CommandParameter="{}{heure}" />
+                </WrapPanel>
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding RecordingNamePreview, Converter={x:Static l:Loc.Format}, ConverterParameter=Settings.RecNamePreview}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel>
+              <TextBlock Classes="h3" Text="{l:Tr Settings.RecGroupSchedule}" Margin="0,6,0,4" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.MargeAvantLeProgrammeMinutes}" FontWeight="SemiBold" />
+                </StackPanel>
+                <NumericUpDown Grid.Column="1" Value="{Binding MarginBefore}" Minimum="0" Maximum="30" Increment="1" FormatString="0" Width="140" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.MargeApresLeProgrammeMinutes}" FontWeight="SemiBold" />
+                </StackPanel>
+                <NumericUpDown Grid.Column="1" Value="{Binding MarginAfter}" Minimum="0" Maximum="60" Increment="1" FormatString="0" Width="140" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.RecInstantStop}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.RecInstantStopHint}" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding InstantStopChoices}" SelectedItem="{Binding InstantStop}" Width="220" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.RecMaxSimul}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.RecMaxSimulHint}" />
+                </StackPanel>
+                <NumericUpDown Grid.Column="1" Value="{Binding MaxSimultaneous}" Minimum="1" Maximum="8" Increment="1" FormatString="0" Width="140" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Settings.RecMinFree}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Settings.RecMinFreeHint}" />
+                </StackPanel>
+                <NumericUpDown Grid.Column="1" Value="{Binding MinFreeGb}" Minimum="0" Maximum="500" Increment="1" FormatString="0" Width="140" VerticalAlignment="Center" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Contrôle parental ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=parental}">
+          <Border Classes="section">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="muted" TextWrapping="Wrap" Text="{l:Tr Ui.UnCodeA4Chiffres}" Margin="0,6,0,0" />
+              <WrapPanel ItemSpacing="10" LineSpacing="10">
+                <Button Classes="accent" Content="{l:Tr Ui.DefinirUnCode}" Command="{Binding SetPinCommand}" IsVisible="{Binding !HasPin}" />
+                <Button Classes="soft" Content="{l:Tr Ui.ChangerLeCode}" Command="{Binding SetPinCommand}" IsVisible="{Binding HasPin}" />
+                <Button Classes="soft" Content="{l:Tr Ui.ReverrouillerMaintenant}" Command="{Binding RelockCommand}" IsVisible="{Binding HasPin}" />
+                <Button Classes="danger" Content="{l:Tr Ui.SupprimerLeCode}" Command="{Binding RemovePinCommand}" IsVisible="{Binding HasPin}" />
+              </WrapPanel>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto" IsEnabled="{Binding HasPin}">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.VerrouillerAutomatiquementLesCategoriesAdultes}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.CategoriesDontLeNomContient}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoLockAdult}" OnContent="" OffContent="" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto" IsEnabled="{Binding HasPin}">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.ProtegerAussiLAccesAux}" FontWeight="SemiBold" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding ProtectSettings}" OnContent="" OffContent="" />
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section" IsVisible="{Binding HasPin}">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="h3" Text="{l:Tr Ui.CategoriesVerrouillees}" Margin="0,6,0,4" />
+              <ItemsControl ItemsSource="{Binding LockedCategories}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="core:Category">
+                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2">
+                      <TextBlock Classes="icon" Text="&#xE72E;" FontSize="12" Foreground="{DynamicResource TextMuted}" Margin="0,0,10,0" />
+                      <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" />
+                      <Button Grid.Column="2" Classes="flat" Content="{l:Tr Ui.Deverrouiller}" Foreground="{DynamicResource Accent}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.UnlockCommand}" CommandParameter="{Binding}" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Profils ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=profiles}">
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Profile.AskAtStartup}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Profile.AskAtStartupHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AskProfileAtStartup}" OnContent="" OffContent="" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Profile.Manage}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding ProfilesCountText}" />
+                </StackPanel>
+                <Button Grid.Column="1" Classes="soft" Command="{Binding ManageProfilesCommand}" Content="{l:Tr Profile.Manage}" VerticalAlignment="Center" />
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <TextBlock Classes="muted" TextWrapping="Wrap" Text="{l:Tr Profile.SectionHint}" Margin="0,6" />
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── TMDB ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=tmdb}">
+          <Border Classes="section">
+            <StackPanel Spacing="12" Margin="0,6">
+              <TextBlock Classes="muted" TextWrapping="Wrap" Text="{l:Tr Ui.AvecUneCleGratuiteThe}" />
+              <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBox Text="{Binding TmdbKey}" Watermark="{l:Tr Ui.CleApiV3OuJeton}" PasswordChar="●" />
+                <Button Grid.Column="1" Classes="accent" Margin="10,0,0,0" Content="{l:Tr Ui.EnregistrerEtVerifier}" Command="{Binding SaveTmdbCommand}" IsEnabled="{Binding !TmdbBusy}" />
+                <Button Grid.Column="2" Classes="flat" Margin="6,0,0,0" Content="{l:Tr Ui.ObtenirUneCle}" Command="{Binding OpenTmdbSiteCommand}" Foreground="{DynamicResource Accent}" />
+              </Grid>
+              <TextBlock Text="{Binding TmdbStatus}" FontSize="13" IsVisible="{Binding TmdbStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                         Foreground="{DynamicResource TextSecondary}" />
+              <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Tmdb.Attribution}" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- ─────────── Données et à propos ─────────── -->
+        <StackPanel Spacing="16" IsVisible="{Binding Section, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=data}">
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Update.Title}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding UpdateStatus}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                  <Button Classes="soft" Content="{l:Tr Update.Check}" Command="{Binding CheckUpdatesCommand}" IsEnabled="{Binding CanCheckUpdates}" />
+                  <Button Classes="accent" Content="{l:Tr Update.Restart}" Command="{Binding RestartForUpdateCommand}" IsVisible="{Binding UpdateReady}" />
+                </StackPanel>
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Update.Auto}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Update.AutoHint}" />
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoUpdate}" OnContent="" OffContent="" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Update.Channel}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Update.ChannelHint}" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" Width="210" VerticalAlignment="Center" SelectedIndex="{Binding UpdateChannelIndex}">
+                  <ComboBoxItem Content="{l:Tr Update.ChannelStable}" />
+                  <ComboBoxItem Content="{l:Tr Update.ChannelBeta}" />
+                </ComboBox>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Backup.Title}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Backup.Hint}" />
+                </StackPanel>
+              </Grid>
+              <WrapPanel ItemSpacing="10" LineSpacing="10" Margin="0,4,0,8">
+                <Button Classes="soft" Content="{l:Tr Backup.Create}" Command="{Binding CreateBackupCommand}" />
+                <Button Classes="soft" Content="{l:Tr Backup.Restore}" Command="{Binding RestoreBackupCommand}" />
+                <Button Classes="flat" Content="{l:Tr Backup.OpenFolder}" Command="{Binding OpenBackupsFolderCommand}" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel>
+              <Grid Classes="setting" ColumnDefinitions="*,Auto">
+                <StackPanel>
+                  <TextBlock Text="{l:Tr Ui.ActualisationAutomatiqueHeures}" FontWeight="SemiBold" />
+                  <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Ui.FrequenceDeMiseAJour}" />
+                </StackPanel>
+                <NumericUpDown Grid.Column="1" Value="{Binding CatalogRefreshHours}" Minimum="1" Maximum="168" Increment="1" FormatString="0" Width="140" VerticalAlignment="Center" />
+              </Grid>
+              <Border Classes="sep" />
+              <WrapPanel ItemSpacing="10" LineSpacing="10" Margin="0,12,0,8">
+                <Button Classes="soft" Content="{l:Tr Ui.ViderLeCacheDesImages}" Command="{Binding ClearImageCacheCommand}" />
+                <Button Classes="soft" Content="{l:Tr Ui.OuvrirLeDossierDesJournaux}" Command="{Binding OpenLogsCommand}" />
+                <Button Classes="soft" Content="{l:Tr Changelog.Title}" Command="{Binding Main.ShowChangelogCommand}" />
+                <Button Classes="soft" Content="{l:Tr About.Licenses}" Command="{Binding OpenLicensesCommand}" IsVisible="{Binding HasLicenses}" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+          <Border Classes="section">
+            <StackPanel Spacing="10" Margin="0,6">
+              <TextBlock Classes="h3" Text="{l:Tr Ui.RaccourcisClavierDuLecteur}" />
+              <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Row="0" Classes="muted" Margin="0,3" Text="{l:Tr Ui.EspaceLecturePause}" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Classes="muted" Margin="0,3" Text="{l:Tr Ui.FOuDoubleClicPlein}" />
+                <TextBlock Grid.Row="1" Classes="muted" Margin="0,3" Text="{l:Tr Ui.Reculer10SAvancer30}" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Classes="muted" Margin="0,3" Text="{l:Tr Ui.LRetourAuDirect}" />
+                <TextBlock Grid.Row="2" Classes="muted" Margin="0,3" Text="{l:Tr Ui.ChainePrecedenteSuivante}" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Classes="muted" Margin="0,3" Text="{l:Tr Ui.MajMajOuMoletteVolume}" />
+                <TextBlock Grid.Row="3" Classes="muted" Margin="0,3" Text="{l:Tr Ui.CListeDesChaines}" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Classes="muted" Margin="0,3" Text="{l:Tr Ui.AAudioEtSousTitres}" />
+                <TextBlock Grid.Row="4" Classes="muted" Margin="0,3" Text="{l:Tr Ui.REnregistrer}" />
+                <TextBlock Grid.Row="4" Grid.Column="1" Classes="muted" Margin="0,3" Text="{l:Tr Ui.MCouperLeSon}" />
+                <TextBlock Grid.Row="5" Classes="muted" Margin="0,3" Text="{l:Tr Ui.EchapQuitterLePleinEcran}" />
+                <TextBlock Grid.Row="5" Grid.Column="1" Classes="muted" Margin="0,3" Text="{l:Tr Ui.CtrlFRechercher}" />
+              </Grid>
+            </StackPanel>
+          </Border>
+          <Button Classes="flat" Padding="8,4" HorizontalAlignment="Center" Command="{Binding Main.ShowChangelogCommand}" ToolTip.Tip="{l:Tr Changelog.Title}">
+            <TextBlock Classes="faint" Text="{Binding Version}" />
+          </Button>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

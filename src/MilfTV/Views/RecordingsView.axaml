@@ -1,0 +1,98 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             x:Class="MilfTV.Views.RecordingsView"
+             x:DataType="vm:RecordingsViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="28,4,28,32" Spacing="26" MaxWidth="1100" HorizontalAlignment="Stretch">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Classes="h1" Text="{l:Tr Ui.Enregistrements}" />
+          <TextBlock Classes="muted" Text="{Binding Folder, Converter={x:Static l:Loc.Format}, ConverterParameter=Rec.FolderLabel}" TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+        <Button Grid.Column="1" Classes="soft" Command="{Binding OpenFolderCommand}" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Classes="icon" Text="&#xE8B7;" FontSize="14" />
+            <TextBlock Text="{l:Tr Ui.OuvrirLeDossier}" />
+          </StackPanel>
+        </Button>
+      </Grid>
+
+      <Border Classes="card" Padding="18" IsVisible="{Binding IsEmpty}">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="h3" Text="{l:Tr Ui.AucunEnregistrement}" />
+          <TextBlock Classes="muted" TextWrapping="Wrap"
+                     Text="{l:Tr Ui.PendantLeDirectCliquezSur}" />
+        </StackPanel>
+      </Border>
+
+      <StackPanel Spacing="10" IsVisible="{Binding HasUpcoming}">
+        <TextBlock Classes="h2" Text="{l:Tr Ui.ProgrammesEtEnCours}" />
+        <ItemsControl ItemsSource="{Binding Upcoming}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:RecordingItem">
+              <Border Classes="card" Padding="16,12" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <Ellipse Width="12" Height="12" Margin="2,0,16,0" VerticalAlignment="Center"
+                           Fill="{DynamicResource Live}" IsVisible="{Binding IsRecording}" />
+                  <Ellipse Width="12" Height="12" Margin="2,0,16,0" VerticalAlignment="Center" StrokeThickness="2"
+                           Stroke="{DynamicResource Live}" IsVisible="{Binding !IsRecording}" />
+                  <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="caption">
+                      <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0}  ·  {1}  ·  {2}">
+                          <Binding Path="Channel" />
+                          <Binding Path="When" />
+                          <Binding Path="StatusText" />
+                        </MultiBinding>
+                      </TextBlock.Text>
+                    </TextBlock>
+                  </StackPanel>
+                  <Button Grid.Column="2" Classes="danger" Content="{l:Tr Ui.Annuler}" VerticalAlignment="Center"
+                          Command="{ReflectionBinding $parent[UserControl].DataContext.CancelCommand}" CommandParameter="{Binding}" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <StackPanel Spacing="10" IsVisible="{Binding HasDone}">
+        <TextBlock Classes="h2" Text="{l:Tr Ui.Termines}" />
+        <ItemsControl ItemsSource="{Binding Done}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:RecordingItem">
+              <Border Classes="card" Padding="16,12" Margin="0,0,0,8">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <Button Classes="icon" Width="44" Height="44" Margin="0,0,14,0" IsEnabled="{Binding CanPlay}"
+                          Background="{DynamicResource AccentSoft}"
+                          Command="{ReflectionBinding $parent[UserControl].DataContext.PlayCommand}" CommandParameter="{Binding}">
+                    <TextBlock Classes="icon" Text="&#xE768;" FontSize="15" Foreground="{DynamicResource Accent}" />
+                  </Button>
+                  <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="caption" TextTrimming="CharacterEllipsis">
+                      <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0}  ·  {1}  ·  {2}">
+                          <Binding Path="Channel" />
+                          <Binding Path="When" />
+                          <Binding Path="StatusText" />
+                        </MultiBinding>
+                      </TextBlock.Text>
+                    </TextBlock>
+                  </StackPanel>
+                  <Button Grid.Column="2" Classes="icon" ToolTip.Tip="{l:Tr Ui.Supprimer}" VerticalAlignment="Center"
+                          Command="{ReflectionBinding $parent[UserControl].DataContext.DeleteCommand}" CommandParameter="{Binding}">
+                    <TextBlock Classes="icon" Text="&#xE74D;" FontSize="14" />
+                  </Button>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

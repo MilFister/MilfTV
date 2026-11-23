@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:MilfTV.Localization"
+             xmlns:vm="using:MilfTV.ViewModels"
+             x:Class="MilfTV.Views.BackupDialogView"
+             x:DataType="vm:BackupDialogViewModel">
+  <Border Classes="card" Width="600" Padding="26" Background="{DynamicResource SurfaceRaised}" BoxShadow="0 24 60 0 #66000000">
+    <StackPanel Spacing="16">
+      <TextBlock Classes="h2" Text="{Binding DialogTitle}" />
+
+      <!-- Ce qui est, ou n'est pas, dans une sauvegarde -->
+      <Grid ColumnDefinitions="*,*">
+        <StackPanel Spacing="6" Margin="0,0,10,0">
+          <TextBlock Text="{l:Tr Backup.IncludedTitle}" FontWeight="SemiBold" />
+          <TextBlock Classes="muted" FontSize="13" LineHeight="20" TextWrapping="Wrap" Text="{l:Tr Backup.Included}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Spacing="6" Margin="10,0,0,0">
+          <TextBlock Text="{l:Tr Backup.ExcludedTitle}" FontWeight="SemiBold" />
+          <TextBlock Classes="muted" FontSize="13" LineHeight="20" TextWrapping="Wrap" Text="{l:Tr Backup.Excluded}" />
+        </StackPanel>
+      </Grid>
+
+      <!-- Création : mot de passe facultatif pour emporter les secrets sur un autre PC -->
+      <StackPanel Spacing="8" IsVisible="{Binding IsCreate}">
+        <StackPanel Spacing="8" IsVisible="{Binding HasSecrets}">
+          <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Backup.SecretsHint}" />
+          <TextBox Text="{Binding Password}" PasswordChar="●" Watermark="{l:Tr Backup.PasswordOptional}" />
+          <TextBox Text="{Binding PasswordConfirm}" PasswordChar="●" Watermark="{l:Tr Backup.PasswordConfirm}"
+                   IsVisible="{Binding Password, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Restauration : contenu du fichier choisi, mot de passe s'il en faut un -->
+      <StackPanel Spacing="10" IsVisible="{Binding IsRestore}">
+        <Border CornerRadius="10" Padding="14,12" Background="{DynamicResource Surface}" IsVisible="{Binding HasFile}">
+          <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+        </Border>
+        <TextBox Text="{Binding Password}" PasswordChar="●" Watermark="{l:Tr Backup.PasswordOfBackup}" IsVisible="{Binding NeedsPassword}" />
+        <TextBlock Text="{Binding SecretsWarning}" TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource Warning}"
+                   IsVisible="{Binding SecretsWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Backup.RestoreWarning}" />
+      </StackPanel>
+
+      <TextBlock Text="{Binding Error}" Foreground="{DynamicResource Danger}" TextWrapping="Wrap"
+                 IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+        <Arc Classes="spinner small" VerticalAlignment="Center" IsVisible="{Binding IsBusy}" />
+        <Button Classes="flat" Content="{l:Tr Ui.Annuler}" Command="{Binding CancelCommand}" />
+        <Button Classes="accent" Content="{l:Tr Backup.ChooseLocation}" Click="OnCreateClick"
+                IsVisible="{Binding IsCreate}" IsEnabled="{Binding !IsBusy}" />
+        <Button Classes="soft" Content="{l:Tr Backup.ChooseFile}" Click="OnChooseFileClick"
+                IsVisible="{Binding IsRestore}" IsEnabled="{Binding !IsBusy}" />
+        <Button Classes="accent" Content="{l:Tr Backup.RestoreAndRestart}" Command="{Binding RestoreCommand}"
+                IsVisible="{Binding IsRestore}" IsEnabled="{Binding CanRestore}" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

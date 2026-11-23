@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+*.user
+native/*.dll
+Sources initiales/
+publish/
+artifacts/
+publish-*/
+# Le chargeur Vulkan (1,7 Mo, Apache-2.0) est versionné ; libmpv-2.dll (~120 Mo) dépasse la limite de GitHub.
+!native/vulkan-1.dll

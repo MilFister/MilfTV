@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:MilfTV.Localization"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:img="using:MilfTV.Images"
+             x:Class="MilfTV.Views.PosterCardPreview"
+             x:DataType="vm:PosterPreviewViewModel"
+             Width="460">
+  <!-- Aperçu au survol d'une affiche. La vidéo est une surface native : rien n'est dessiné par-dessus. -->
+  <Border Background="{DynamicResource SurfaceRaised}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="1"
+          CornerRadius="16" BoxShadow="0 24 64 0 #8C000000" Padding="7">
+    <StackPanel>
+      <!-- Zone 16:9 : bande-annonce, ou fond / affiche pendant le chargement et sans bande-annonce -->
+      <Border CornerRadius="6" ClipToBounds="True" Background="Black" Height="250">
+        <ctl:TrailerHost x:Name="Trailer" VideoKey="{Binding TrailerKey}" Muted="{Binding IsMuted}" Volume="{Binding Volume}" Autoplay="True" ShowControls="False"
+                         PosterUrl="{Binding ImageUrl}" TrailerLanguage="{Binding TrailerLanguage}">
+          <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="480" Stretch="UniformToFill" />
+          <Arc Classes="spinner small white" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="12" IsVisible="{Binding IsLoading}" />
+        </ctl:TrailerHost>
+      </Border>
+
+      <StackPanel Margin="11,12,11,6" Spacing="7">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="{Binding Title}" FontFamily="{StaticResource DisplayFont}" FontSize="19" FontWeight="Bold" TextTrimming="CharacterEllipsis"
+                     VerticalAlignment="Center" />
+          <!-- Son de la bande-annonce : couper / rétablir et volume (la vidéo, surface native, ne peut rien afficher par-dessus) -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" Margin="10,0,0,0" VerticalAlignment="Center"
+                      IsVisible="{Binding TrailerKey, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <Button Classes="icon" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="{l:Tr Preview.Sound}">
+              <TextBlock Classes="icon" FontSize="15" Text="{Binding IsMuted, Converter={x:Static ctl:Conv.MuteGlyph}}" />
+            </Button>
+            <Slider Width="100" Minimum="0" Maximum="100" SmallChange="5" LargeChange="10" Value="{Binding Volume}"
+                    VerticalAlignment="Center" ToolTip.Tip="{l:Tr Preview.Volume}" />
+          </StackPanel>
+        </Grid>
+        <TextBlock Text="{Binding MetaLine}" Classes="muted" FontSize="12.5" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                   IsVisible="{Binding MetaLine, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Text="{Binding Plot}" FontSize="13" LineHeight="19" TextWrapping="Wrap" MaxLines="4" TextTrimming="CharacterEllipsis"
+                   Foreground="{DynamicResource TextSecondary}" IsVisible="{Binding HasPlot}" />
+
+        <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" Margin="0,6,0,0">
+          <Button Classes="accent" Command="{Binding PlayCommand}" Padding="16,8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Classes="icon" Text="&#xE768;" FontSize="13" Foreground="{DynamicResource OnAccent}" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr Vod.Play}" Foreground="{DynamicResource OnAccent}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Grid.Column="1" Classes="soft" Command="{Binding ToggleFavoriteCommand}" Padding="12,8" Margin="8,0,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Classes="icon" FontSize="13" Text="{Binding Item.IsFavorite, Converter={x:Static ctl:Conv.HeartGlyph}}"
+                         Foreground="{DynamicResource Accent}" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr Detail.MyList}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Grid.Column="2" Classes="soft" Command="{Binding MoreInfoCommand}" Padding="12,8" Margin="8,0,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Classes="icon" FontSize="13" Text="&#xE946;" VerticalAlignment="Center" />
+              <TextBlock Text="{l:Tr Ui.PlusDInfos}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </Grid>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

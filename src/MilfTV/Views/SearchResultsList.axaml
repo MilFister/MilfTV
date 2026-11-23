@@ -1,0 +1,121 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:img="using:MilfTV.Images"
+             x:Class="MilfTV.Views.SearchResultsList"
+             x:DataType="core:SearchResults">
+  <UserControl.Styles>
+    <Style Selector="Button.result">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="8,6" />
+      <Setter Property="CornerRadius" Value="10" />
+    </Style>
+    <Style Selector="Button.result:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+    </Style>
+    <Style Selector="TextBlock.group">
+      <Setter Property="Margin" Value="10,12,0,4" />
+    </Style>
+  </UserControl.Styles>
+
+  <StackPanel Spacing="1">
+    <!-- Chaînes -->
+    <TextBlock Classes="section group" Text="{l:Tr Ui.Chaines2}" x:Name="ChannelsHeader" />
+    <ItemsControl x:Name="ChannelsList">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="core:LiveChannel">
+          <Button Classes="result" Click="OnItemClick">
+            <Grid ColumnDefinitions="60,*">
+              <Border Width="52" Height="36" CornerRadius="8" Background="{DynamicResource Placeholder}" ClipToBounds="True">
+                <Panel>
+                  <TextBlock Text="{Binding Initials}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PlaceholderText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="120" Stretch="Uniform" Margin="4" />
+                </Panel>
+              </Border>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding NowTitle}" Classes="caption" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding NowTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              </StackPanel>
+            </Grid>
+          </Button>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- Films -->
+    <TextBlock Classes="section group" Text="{l:Tr Ui.Films2}" x:Name="MoviesHeader" />
+    <ItemsControl x:Name="MoviesList">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="core:Movie">
+          <Button Classes="result" Click="OnItemClick">
+            <Grid ColumnDefinitions="60,*">
+              <Border Width="36" Height="54" CornerRadius="6" Background="{DynamicResource Placeholder}" ClipToBounds="True" HorizontalAlignment="Left">
+                <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="90" Stretch="UniformToFill" />
+              </Border>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="caption" Text="{Binding YearText}" />
+              </StackPanel>
+            </Grid>
+          </Button>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- Séries -->
+    <TextBlock Classes="section group" Text="{l:Tr Ui.Series2}" x:Name="SeriesHeader" />
+    <ItemsControl x:Name="SeriesList">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="core:Series">
+          <Button Classes="result" Click="OnItemClick">
+            <Grid ColumnDefinitions="60,*">
+              <Border Width="36" Height="54" CornerRadius="6" Background="{DynamicResource Placeholder}" ClipToBounds="True" HorizontalAlignment="Left">
+                <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="90" Stretch="UniformToFill" />
+              </Border>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="caption" Text="{Binding YearText}" />
+              </StackPanel>
+            </Grid>
+          </Button>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- Programmes -->
+    <TextBlock Classes="section group" Text="{l:Tr Ui.ProgrammesTv}" x:Name="ProgramsHeader" />
+    <ItemsControl x:Name="ProgramsList">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="core:ProgramHit">
+          <Button Classes="result" Click="OnItemClick">
+            <Grid ColumnDefinitions="60,*,Auto">
+              <Border Width="52" Height="36" CornerRadius="8" Background="{DynamicResource Placeholder}" ClipToBounds="True">
+                <Image img:ImageLoader.Source="{Binding Channel.ImageUrl}" img:ImageLoader.DecodeWidth="120" Stretch="Uniform" Margin="4" />
+              </Border>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                <TextBlock Text="{Binding Program.Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                <TextBlock Classes="caption" TextTrimming="CharacterEllipsis">
+                  <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}  ·  {1}">
+                      <Binding Path="Channel.Name" />
+                      <Binding Path="When" />
+                    </MultiBinding>
+                  </TextBlock.Text>
+                </TextBlock>
+              </StackPanel>
+              <Border Grid.Column="2" Classes="badge live" IsVisible="{Binding IsLive}" Margin="8,0,4,0">
+                <TextBlock Text="{l:Tr Ui.EnDirect}" />
+              </Border>
+            </Grid>
+          </Button>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </StackPanel>
+</UserControl>

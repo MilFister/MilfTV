@@ -1,0 +1,299 @@
+<Window xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MilfTV.ViewModels"
+        xmlns:core="using:MilfTV.Core"
+        xmlns:ctl="using:MilfTV.Controls"
+        xmlns:img="using:MilfTV.Images"
+        xmlns:v="using:MilfTV.Views"
+        x:Class="MilfTV.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="MilfTV"
+        Width="1440" Height="880" MinWidth="1000" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBg}"
+        FontFamily="{StaticResource TextFont}"
+        Foreground="{DynamicResource TextPrimary}"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="56">
+
+  <Grid>
+    <!-- ═════════════ Application ═════════════ -->
+    <Grid ColumnDefinitions="236,*" IsVisible="{Binding Player.ShowsApp}">
+
+      <!-- Barre latérale -->
+      <Border Grid.Column="0" Background="{DynamicResource AppBgAlt}" BorderBrush="{DynamicResource BorderSubtle}" BorderThickness="0,0,1,0">
+        <DockPanel Margin="14,12,14,14">
+          <Border DockPanel.Dock="Top" Background="Transparent" PointerPressed="OnDragPressed" Padding="6,6,0,24">
+            <StackPanel Orientation="Horizontal" Spacing="11">
+              <ctl:LogoMark Width="36" Height="36" />
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="MilfTV" FontFamily="{StaticResource DisplayFont}" FontSize="21" FontWeight="Bold" />
+                <TextBlock Text="IPTV Player" FontSize="11" Classes="faint" Margin="1,-3,0,0" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <StackPanel DockPanel.Dock="Bottom" Spacing="2">
+            <!-- Profil actif -->
+            <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="10,8" Margin="0,0,0,6"
+                    x:Name="ProfileButton" Click="OnProfileButtonClick" IsVisible="{Binding Lib.Profile, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <ctl:ProfileAvatar Width="34" Height="34" Profile="{Binding Lib.Profile}" />
+                <StackPanel Grid.Column="1" Margin="10,0,4,0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Lib.Profile.Name, FallbackValue=''}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Text="{l:Tr Menu.ButtonHint}" FontSize="11" Classes="faint" />
+                </StackPanel>
+                <TextBlock Grid.Column="2" Classes="icon" Text="&#xE70D;" FontSize="11" Foreground="{DynamicResource TextMuted}" />
+              </Grid>
+            </Button>
+            <!-- Source active -->
+            <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="10,9"
+                    Command="{Binding RefreshCatalogCommand}" IsVisible="False" />
+            <Border Classes="card" Padding="0" Margin="0,0,0,8">
+              <Button Classes="flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="12,10"
+                      x:Name="SourceButton" Click="OnSourceButtonClick" ToolTip.Tip="{l:Tr Ui.ChangerDeSource}">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <Border Width="32" Height="32" CornerRadius="9" Background="{DynamicResource AccentSoft}">
+                    <TextBlock Classes="icon" Text="{Binding Lib.Source.Kind, Converter={x:Static ctl:Conv.SourceGlyph}}" Foreground="{DynamicResource Accent}" FontSize="15" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="10,0,4,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SourceTitle}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding SourceSubtitle}" FontSize="11" Classes="faint" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Classes="icon" Text="&#xE70D;" FontSize="11" Foreground="{DynamicResource TextMuted}" />
+                </Grid>
+              </Button>
+            </Border>
+            <Button Classes="nav" Command="{Binding ToggleThemeCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="14">
+                <TextBlock Classes="icon" FontSize="17" Text="{Binding IsDark, Converter={x:Static ctl:Conv.ThemeGlyph}}" />
+                <TextBlock Text="{Binding IsDark, Converter={x:Static ctl:Conv.ThemeLabel}}" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="nav" Classes.active="{Binding ActiveNav, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=settings}"
+                    Command="{Binding NavigateCommand}" CommandParameter="settings">
+              <StackPanel Orientation="Horizontal" Spacing="14">
+                <TextBlock Classes="icon" FontSize="17" Text="&#xE713;" />
+                <TextBlock Text="{l:Tr Ui.Parametres}" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <ItemsControl ItemsSource="{Binding NavItems}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:NavItem">
+                <Button Classes="nav" Classes.active="{Binding IsActive}" Margin="0,2"
+                        Command="{ReflectionBinding $parent[Window].DataContext.NavigateCommand}" CommandParameter="{Binding Key}">
+                  <StackPanel Orientation="Horizontal" Spacing="14">
+                    <TextBlock Classes="icon" FontSize="17" Text="{Binding Icon}" />
+                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </DockPanel>
+      </Border>
+
+      <!-- Colonne principale -->
+      <Grid Grid.Column="1" RowDefinitions="56,*">
+        <!-- Barre supérieure (zone de déplacement de la fenêtre) -->
+        <Grid Grid.Row="0" ColumnDefinitions="200,*,200" Margin="16,0,150,0">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Classes="icon" Command="{Binding GoBackCommand}" IsVisible="{Binding CanGoBack}" ToolTip.Tip="{l:Tr Ui.RetourEchap}">
+              <TextBlock Classes="icon" Text="&#xE72B;" FontSize="15" />
+            </Button>
+          </StackPanel>
+
+          <Panel Grid.Column="1" MaxWidth="560" VerticalAlignment="Center" x:Name="SearchHost">
+            <TextBox x:Name="SearchBox" Classes="search" Text="{Binding SearchText}"
+                     Watermark="{l:Tr Ui.RechercherUneChaineUnFilm}"
+                     KeyDown="OnSearchKeyDown" />
+            <TextBlock Classes="icon" Text="&#xE721;" HorizontalAlignment="Left" Margin="15,0,0,0" FontSize="14"
+                       Foreground="{DynamicResource TextMuted}" IsHitTestVisible="False" />
+            <Button Classes="icon" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,6,0"
+                    Command="{Binding ClearSearchCommand}" IsVisible="{Binding SearchText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Classes="icon" Text="&#xE711;" FontSize="11" />
+            </Button>
+            <Popup x:Name="SearchPopup" PlacementTarget="{Binding #SearchBox}" Placement="Bottom" VerticalOffset="8"
+                   IsOpen="{Binding IsSearchOpen, Mode=TwoWay}" IsLightDismissEnabled="True"
+                   OverlayDismissEventPassThrough="True" WindowManagerAddShadowHint="False">
+              <Border Classes="card" Width="620" MaxHeight="580" Background="{DynamicResource SurfaceRaised}" BoxShadow="0 18 40 0 #55000000" Padding="8">
+                <DockPanel>
+                  <Button DockPanel.Dock="Bottom" Classes="flat" HorizontalAlignment="Stretch" Margin="0,6,0,0"
+                          Command="{Binding ShowAllResultsCommand}">
+                    <TextBlock Classes="accent" FontWeight="SemiBold" HorizontalAlignment="Center" Text="{l:Tr Ui.VoirTousLesResultatsEntree}" />
+                  </Button>
+                  <ScrollViewer>
+                    <StackPanel Spacing="2">
+                      <TextBlock Text="{l:Tr Ui.AucunResultat}" Classes="muted" Margin="12,14" IsVisible="{Binding QuickResults.IsEmpty, FallbackValue=False}" />
+                      <v:SearchResultsList DataContext="{Binding QuickResults}" Compact="True" />
+                    </StackPanel>
+                  </ScrollViewer>
+                </DockPanel>
+              </Border>
+            </Popup>
+          </Panel>
+
+          <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Lib.IsLoading}" ToolTip.Tip="{Binding Lib.Status}">
+              <Arc Classes="spinner small" />
+              <TextBlock Text="{l:Tr Ui.MiseAJour}" Classes="caption" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Lib.IsEpgLoading}" ToolTip.Tip="{Binding Lib.EpgStatus}">
+              <Arc Classes="spinner small" />
+              <TextBlock Text="{l:Tr Ui.GuideTv2}" Classes="caption" VerticalAlignment="Center" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+
+        <!-- Contenu -->
+        <Panel Grid.Row="1">
+          <ContentControl Content="{Binding CurrentPage}" />
+
+          <!-- Premier chargement -->
+          <Border Background="{DynamicResource AppBg}" IsVisible="False" x:Name="FirstLoad">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="18">
+              <ctl:LogoMark Width="64" Height="64" HorizontalAlignment="Center" />
+              <Arc Classes="spinner" HorizontalAlignment="Center" />
+              <TextBlock Text="{Binding Lib.Status}" Classes="muted" HorizontalAlignment="Center" />
+            </StackPanel>
+          </Border>
+
+          <!-- Erreur de chargement sans catalogue -->
+          <Border Background="{DynamicResource AppBg}" x:Name="LoadError" IsVisible="False">
+            <Border Classes="card" Width="520" Padding="32" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <StackPanel Spacing="14">
+                <TextBlock Classes="icon" Text="&#xE7BA;" FontSize="34" Foreground="{DynamicResource Warning}" />
+                <TextBlock Classes="h2" Text="{l:Tr Ui.ImpossibleDeChargerLaSource}" HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding Lib.Error}" Classes="muted" TextWrapping="Wrap" TextAlignment="Center" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="0,8,0,0">
+                  <Button Classes="accent" Content="{l:Tr Ui.Reessayer}" Command="{Binding RefreshCatalogCommand}" />
+                  <Button Classes="soft" Content="{l:Tr Ui.ModifierLaSource}" Click="OnEditSourceClick" />
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </Border>
+        </Panel>
+      </Grid>
+    </Grid>
+
+    <!-- ═════════════ Lecteur ═════════════ -->
+    <!-- Plein cadre, ou mini-lecteur flottant dans un coin (taille, coin, ombre et arrondi posés par MainWindow.MiniPlayer.cs). -->
+    <Border x:Name="PlayerHost" Background="Black" IsVisible="{Binding Player.IsOpen}">
+    <Border x:Name="PlayerClip">
+    <Grid RowDefinitions="Auto,*">
+      <Border x:Name="PlayerTitleBar" Height="36" Background="#0B0B0F" PointerPressed="OnDragPressed">
+        <Border.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="!IsFullscreen" />
+            <Binding Path="!Player.IsMini" />
+          </MultiBinding>
+        </Border.IsVisible>
+        <StackPanel Orientation="Horizontal" Spacing="9" Margin="12,0,150,0" VerticalAlignment="Center">
+          <ctl:LogoMark Width="18" Height="18" />
+          <TextBlock Text="MilfTV" Foreground="#99FFFFFF" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+          <TextBlock Text="·" Foreground="#66FFFFFF" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding Player.Title}" Foreground="#CCFFFFFF" FontSize="12.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="800" />
+        </StackPanel>
+      </Border>
+      <v:PlayerView Grid.Row="1" DataContext="{Binding Player}" />
+      <Panel Grid.Row="1" IsVisible="{Binding Player.IsMini}">
+        <v:MiniPlayerOverlay x:Name="MiniOverlay" DataContext="{Binding Player}" />
+      </Panel>
+      <Border Grid.RowSpan="2" CornerRadius="14" BorderBrush="#38FFFFFF" BorderThickness="1" IsHitTestVisible="False" IsVisible="{Binding Player.IsMini}" />
+    </Grid>
+    </Border>
+    </Border>
+
+    <!-- ═════════════ Qui regarde ? ═════════════ -->
+    <ContentControl Content="{Binding ProfileOverlay}" IsVisible="{Binding ProfileOverlay, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+    <!-- ═════════════ Dialogue ═════════════ -->
+    <Grid Background="{DynamicResource Scrim}" IsVisible="{Binding Dialog, Converter={x:Static ObjectConverters.IsNotNull}}"
+          PointerPressed="OnScrimPressed">
+      <ScrollViewer HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,36,0,12" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <ContentControl Content="{Binding Dialog}" HorizontalAlignment="Center" />
+      </ScrollViewer>
+    </Grid>
+
+    <!-- ═════════════ Aperçu au survol des affiches ═════════════ -->
+    <!-- Calque placé par PosterPreviewController (pas de Popup : la vidéo native y est peu fiable). -->
+    <Canvas x:Name="HoverLayer">
+      <v:PosterCardPreview x:Name="HoverPreview" IsVisible="False" />
+    </Canvas>
+
+    <!-- ═════════════ Bande-annonce ═════════════ -->
+    <!-- La vidéo est une surface native toujours au premier plan : titre et boutons sont au-dessus d'elle, jamais dessus. -->
+    <Grid x:Name="TrailerOverlay" Background="{DynamicResource ScrimStrong}" IsVisible="{Binding IsTrailerOpen}"
+          PointerPressed="OnTrailerScrimPressed" SizeChanged="OnTrailerOverlaySizeChanged">
+      <Grid x:Name="TrailerFrame" RowDefinitions="Auto,Auto" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid x:Name="TrailerHeader" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <TextBlock Classes="icon" Text="&#xE714;" FontSize="20" Foreground="White" VerticalAlignment="Center" />
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="{l:Tr Vod.Trailer}" FontSize="12" Foreground="#99FFFFFF" />
+              <TextBlock Text="{Binding TrailerTitle}" FontFamily="{StaticResource DisplayFont}" FontSize="20" FontWeight="Bold"
+                         Foreground="White" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="16,0,0,0">
+            <Button Classes="osd" Command="{Binding OpenTrailerInBrowserCommand}" CommandParameter="{x:Null}"
+                    ToolTip.Tip="{l:Tr Trailer.OpenOnYoutube}" IsEnabled="{Binding TrailerKey, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Classes="icon" Text="&#xE8A7;" />
+            </Button>
+            <Button x:Name="TrailerCloseButton" Classes="osd" Command="{Binding CloseTrailerCommand}" ToolTip.Tip="{l:Tr Trailer.CloseHint}">
+              <TextBlock Classes="icon" Text="&#xE711;" />
+            </Button>
+          </StackPanel>
+        </Grid>
+        <Border Grid.Row="1" x:Name="TrailerBox" Background="Black" Width="1280" Height="720">
+          <ctl:TrailerHost x:Name="TrailerPlayer" VideoKey="{Binding TrailerKey}" TrailerLanguage="{Binding TrailerLanguage}"
+                           Autoplay="True" ShowControls="True">
+            <Arc Classes="spinner white" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !#TrailerPlayer.HasError}" />
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="14" Margin="24" IsVisible="{Binding #TrailerPlayer.HasError}">
+              <TextBlock Classes="icon" Text="&#xE7BA;" FontSize="34" Foreground="#CCFFFFFF" HorizontalAlignment="Center" />
+              <TextBlock Text="{l:Tr Trailer.CannotPlay}" Foreground="White" FontSize="15" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="460" />
+              <Button Classes="accent" HorizontalAlignment="Center" Command="{Binding OpenTrailerInBrowserCommand}" CommandParameter="{x:Null}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Classes="icon" Text="&#xE8A7;" FontSize="13" Foreground="{DynamicResource OnAccent}" VerticalAlignment="Center" />
+                  <TextBlock Text="{l:Tr Trailer.OpenOnYoutube}" Foreground="{DynamicResource OnAccent}" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </ctl:TrailerHost>
+        </Border>
+      </Grid>
+    </Grid>
+
+    <!-- ═════════════ Notifications ═════════════ -->
+    <ItemsControl x:Name="ToastHost" ItemsSource="{Binding Toasts}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,24" Width="380">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <StackPanel Spacing="10" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="vm:ToastItem">
+          <Border Classes="card" Background="{DynamicResource SurfaceRaised}" BoxShadow="0 12 32 0 #44000000" Padding="16,12">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Ellipse Width="9" Height="9" Fill="{Binding IsError, Converter={x:Static ctl:Conv.ToastBrush}}" VerticalAlignment="Top" Margin="0,6,12,0" />
+              <StackPanel Grid.Column="1" Spacing="2">
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Message}" Classes="caption" TextWrapping="Wrap" IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <Button Classes="soft" Content="{Binding ActionText}" Margin="0,8,0,0" Padding="12,5" HorizontalAlignment="Left"
+                        IsVisible="{Binding ActionText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Command="{ReflectionBinding $parent[Window].DataContext.RunToastActionCommand}" CommandParameter="{Binding}" />
+              </StackPanel>
+              <Button Grid.Column="2" Classes="icon" Width="28" Height="28" VerticalAlignment="Top" Margin="8,-4,-8,0"
+                      Command="{ReflectionBinding $parent[Window].DataContext.DismissToastCommand}" CommandParameter="{Binding}">
+                <TextBlock Classes="icon" Text="&#xE711;" FontSize="10" />
+              </Button>
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </Grid>
+</Window>

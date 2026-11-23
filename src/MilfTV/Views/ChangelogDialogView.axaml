@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:MilfTV.Localization"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:core="using:MilfTV.Core"
+             x:Class="MilfTV.Views.ChangelogDialogView"
+             x:DataType="vm:ChangelogDialogViewModel">
+  <Border Classes="card" Width="640" Padding="26,24,10,22" Background="{DynamicResource SurfaceRaised}" BoxShadow="0 24 60 0 #66000000">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <TextBlock Classes="h2" Text="{l:Tr Changelog.Title}" Margin="0,0,16,14" />
+
+      <!-- Versions, la plus récente en premier -->
+      <!-- Marge droite sur le contenu, pas en Padding du ScrollViewer (il ne la retire pas de la largeur des lignes). -->
+      <ScrollViewer Grid.Row="1" MaxHeight="540">
+        <ItemsControl ItemsSource="{Binding Entries}" Margin="0,0,18,0">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="18" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="core:ChangelogEntry">
+              <StackPanel Spacing="6">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Text="{Binding Version, StringFormat='MilfTV {0}'}" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" />
+                  <Border CornerRadius="9" Padding="8,2" Background="{DynamicResource AccentSoft}" VerticalAlignment="Center" IsVisible="{Binding IsCurrent}">
+                    <TextBlock Text="{l:Tr Changelog.Current}" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" />
+                  </Border>
+                  <TextBlock Classes="faint" Text="{Binding DateText}" FontSize="12.5" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="0,2,0,4"
+                           IsVisible="{Binding HasSummary}" />
+                <!-- Rubriques (titre facultatif) et leurs modifications -->
+                <ItemsControl ItemsSource="{Binding Sections}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="core:ChangelogSection">
+                      <StackPanel Spacing="2" Margin="0,6,0,0">
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource Accent}"
+                                   Margin="0,0,0,2" IsVisible="{Binding HasTitle}" />
+                        <ItemsControl ItemsSource="{Binding Items}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                              <Grid ColumnDefinitions="16,*" Margin="0,2">
+                                <TextBlock Classes="muted" Text="•" FontSize="13.5" />
+                                <TextBlock Grid.Column="1" Classes="muted" Text="{Binding}" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" />
+                              </Grid>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <Button Grid.Row="2" Classes="accent" HorizontalAlignment="Right" Margin="0,16,16,0" Content="{l:Tr Changelog.Close}"
+              Command="{Binding CloseCommand}" IsDefault="True" />
+    </Grid>
+  </Border>
+</UserControl>

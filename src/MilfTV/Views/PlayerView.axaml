@@ -1,0 +1,456 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:img="using:MilfTV.Images"
+             xmlns:player="using:MilfTV.Player"
+             x:Class="MilfTV.Views.PlayerView"
+             x:DataType="vm:PlayerViewModel"
+             Background="Black"
+             Foreground="White">
+
+  <UserControl.Styles>
+    <Style Selector="Border.fade">
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.25" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="ListBox.zap > ListBoxItem">
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="CornerRadius" Value="10" />
+      <Setter Property="Margin" Value="0,1" />
+    </Style>
+    <Style Selector="ListBox.zap > ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#22FFFFFF" />
+    </Style>
+    <Style Selector="ListBox.zap > ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#33FFFFFF" />
+    </Style>
+    <Style Selector="ThemeVariantScope TextBox">
+      <Setter Property="Background" Value="#22FFFFFF" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderBrush" Value="#33FFFFFF" />
+    </Style>
+    <Style Selector="ThemeVariantScope TextBox:pointerover /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#2EFFFFFF" />
+      <Setter Property="BorderBrush" Value="#55FFFFFF" />
+    </Style>
+    <Style Selector="ThemeVariantScope TextBox:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="#2EFFFFFF" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+    </Style>
+    <Style Selector="ThemeVariantScope ComboBox">
+      <Setter Property="Background" Value="#22FFFFFF" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderBrush" Value="#33FFFFFF" />
+    </Style>
+    <Style Selector="ThemeVariantScope ComboBox:pointerover /template/ Border#Background">
+      <Setter Property="Background" Value="#2EFFFFFF" />
+      <Setter Property="BorderBrush" Value="#55FFFFFF" />
+    </Style>
+    <Style Selector="Button.track">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="Button.track:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#22FFFFFF" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid x:Name="Root">
+    <player:MpvVideoView x:Name="Video" Player="{Binding Engine}" />
+
+    <!-- Toute l'interface du lecteur complet ; masquée en mini-lecteur (qui a son propre calque). -->
+    <Panel x:Name="FullUi" IsVisible="{Binding !IsMini}">
+
+    <!-- Zone de clic : pause / plein écran / volume -->
+    <Border x:Name="ClickArea" Background="Transparent" />
+
+    <!-- Chargement -->
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16" IsHitTestVisible="False"
+                IsVisible="{Binding IsLoading}">
+      <Arc Classes="spinner white" Width="52" Height="52" HorizontalAlignment="Center" />
+      <TextBlock Text="{l:Tr Ui.OuvertureDuFlux}" FontSize="15" Opacity="0.85" HorizontalAlignment="Center" />
+    </StackPanel>
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" IsHitTestVisible="False">
+      <StackPanel.IsVisible>
+        <MultiBinding Converter="{x:Static BoolConverters.And}">
+          <Binding Path="IsBuffering" />
+          <Binding Path="!IsLoading" />
+        </MultiBinding>
+      </StackPanel.IsVisible>
+      <Arc Classes="spinner white" Width="44" Height="44" HorizontalAlignment="Center" />
+      <TextBlock Text="{l:Tr Ui.MiseEnMemoireTampon}" FontSize="13" Opacity="0.8" HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <!-- Message éphémère -->
+    <Border HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,110,0,0" CornerRadius="20" Padding="18,9"
+            Background="#B3101014" IsHitTestVisible="False"
+            IsVisible="{Binding OsdMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding OsdMessage}" FontSize="15" FontWeight="SemiBold" />
+    </Border>
+
+    <!-- Erreur -->
+    <Border HorizontalAlignment="Center" VerticalAlignment="Center" Width="460" CornerRadius="16" Padding="28"
+            Background="#E6141418" BorderBrush="#33FFFFFF" BorderThickness="1"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <StackPanel Spacing="12">
+        <TextBlock Classes="icon" Text="&#xE7BA;" FontSize="34" Foreground="#FFB224" />
+        <TextBlock Text="{l:Tr Ui.LectureImpossible}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
+        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" TextAlignment="Center" Opacity="0.8" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="0,8,0,0">
+          <Button Classes="accent" Content="{l:Tr Ui.Reessayer}" Command="{Binding RetryCommand}" />
+          <Button Classes="osdText" Content="{l:Tr Ui.Fermer}" Command="{Binding CloseCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- ───── Barre du haut ───── -->
+    <Border Classes="fade" VerticalAlignment="Top" Padding="22,16,22,46" x:Name="TopBar"
+            Opacity="{Binding ControlsVisible, Converter={x:Static ctl:PlayerConv.VisibleOpacity}}"
+            IsHitTestVisible="{Binding ControlsVisible}">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#CC000000" Offset="0" />
+          <GradientStop Color="#00000000" Offset="1" />
+        </LinearGradientBrush>
+      </Border.Background>
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+        <Button Classes="osd" Command="{Binding LeaveCommand}" ToolTip.Tip="{Binding LeaveTip}" VerticalAlignment="Center">
+          <TextBlock Classes="icon" Text="&#xE72B;" />
+        </Button>
+        <Border Grid.Column="1" Width="64" Height="46" CornerRadius="10" Background="#26FFFFFF" Margin="10,0,14,0" ClipToBounds="True"
+                IsVisible="{Binding LogoUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <Image img:ImageLoader.Source="{Binding LogoUrl}" img:ImageLoader.DecodeWidth="160" Stretch="Uniform" Margin="5" />
+        </Border>
+        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="3" Margin="4,0,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="700" />
+            <Border Classes="badge live" Margin="0,2,0,0">
+              <Border.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="IsLive" />
+                  <Binding Path="IsAtLiveEdge" />
+                </MultiBinding>
+              </Border.IsVisible>
+              <TextBlock Text="{l:Tr Ui.EnDirect}" />
+            </Border>
+            <Border Classes="badge" Background="#FFB224" Margin="0,2,0,0"
+                    IsVisible="{Binding BehindLiveText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding BehindLiveText}" Foreground="#111" />
+            </Border>
+            <Border Classes="badge live" IsVisible="{Binding IsRecording}" Margin="0,2,0,0">
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <Ellipse Width="7" Height="7" Fill="White" />
+                <TextBlock Text="{Binding RecordingText}" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+          <TextBlock Opacity="0.75" FontSize="13" TextTrimming="CharacterEllipsis">
+            <TextBlock.Text>
+              <MultiBinding StringFormat="{}{0}   {1}">
+                <Binding Path="Subtitle" />
+                <Binding Path="VideoInfo" />
+              </MultiBinding>
+            </TextBlock.Text>
+          </TextBlock>
+        </StackPanel>
+        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+          <Button Classes="osd" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="{l:Tr Ui.Favori}" IsVisible="{Binding IsLive}">
+            <TextBlock Classes="icon" Text="{Binding CurrentChannel.IsFavorite, Converter={x:Static ctl:Conv.HeartGlyph}, FallbackValue=&#xEB51;}" />
+          </Button>
+          <Button Classes="osd" Command="{Binding EnterMiniCommand}" ToolTip.Tip="{l:Tr Player.MiniPlayer}">
+            <TextBlock Classes="icon" Text="&#xEE49;" />
+          </Button>
+          <Button Classes="osd" Command="{Binding CloseCommand}" ToolTip.Tip="{l:Tr Player.StopPlayback}">
+            <TextBlock Classes="icon" Text="&#xE711;" />
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ───── Barre du bas ───── -->
+    <Border Classes="fade" VerticalAlignment="Bottom" Padding="26,70,26,18" x:Name="BottomBar"
+            Opacity="{Binding ControlsVisible, Converter={x:Static ctl:PlayerConv.VisibleOpacity}}"
+            IsHitTestVisible="{Binding ControlsVisible}">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#00000000" Offset="0" />
+          <GradientStop Color="#E6000000" Offset="1" />
+        </LinearGradientBrush>
+      </Border.Background>
+      <StackPanel Spacing="4">
+        <!-- Programme en cours (direct) -->
+        <Grid ColumnDefinitions="*,Auto" Margin="2,0,2,4" IsVisible="{Binding NowTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <StackPanel Spacing="2">
+            <TextBlock Text="{Binding NowTitle}" FontSize="17" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="{Binding NowTime}" Opacity="0.75" FontSize="13" />
+              <ProgressBar Classes="thin" Width="120" Value="{Binding NowProgress}" Maximum="100" VerticalAlignment="Center" Background="#40FFFFFF" />
+              <TextBlock Text="{Binding NextTitle}" Opacity="0.6" FontSize="13" TextTrimming="CharacterEllipsis" MaxWidth="520" />
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+
+        <ctl:SeekBar x:Name="Seek" Minimum="{Binding RangeStart}" Maximum="{Binding RangeEnd}" Value="{Binding Position}"
+                     IsLive="{Binding IsLive}" Fill="{DynamicResource Accent}" />
+
+        <Grid ColumnDefinitions="*,Auto,*" Margin="0,2,0,0">
+          <!-- gauche -->
+          <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+            <Button Classes="osd" Command="{Binding SeekByCommand}" CommandParameter="-10" ToolTip.Tip="{l:Tr Ui.ReculerDe10S}">
+              <TextBlock Classes="icon" Text="&#xED3C;" />
+            </Button>
+            <Button Classes="osd big" Command="{Binding TogglePauseCommand}" ToolTip.Tip="{l:Tr Ui.LecturePauseEspace}">
+              <TextBlock Classes="icon" Text="{Binding IsPaused, Converter={x:Static ctl:Conv.PlayPauseGlyph}}" />
+            </Button>
+            <Button Classes="osd" Command="{Binding SeekByCommand}" CommandParameter="30" ToolTip.Tip="{l:Tr Ui.AvancerDe30S}">
+              <TextBlock Classes="icon" Text="&#xED3D;" />
+            </Button>
+            <Button Classes="osd" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="{l:Tr Ui.SonM}" Margin="10,0,0,0">
+              <TextBlock Classes="icon" Text="{Binding IsMuted, Converter={x:Static ctl:Conv.MuteGlyph}}" />
+            </Button>
+            <Slider Width="110" Minimum="0" Maximum="150" Value="{Binding Volume}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding PositionText}" FontSize="13" Opacity="0.85" VerticalAlignment="Center" Margin="14,0,0,0" />
+            <TextBlock Text="{Binding DurationText, StringFormat='/  {0}'}" FontSize="13" Opacity="0.6" VerticalAlignment="Center" Margin="6,0,0,0"
+                       IsVisible="{Binding DurationText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+
+          <!-- centre : retour au direct -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsVisible="{Binding IsLive}">
+            <Button Classes="osdText" Command="{Binding GoLiveCommand}" IsVisible="{Binding !IsAtLiveEdge}" ToolTip.Tip="{l:Tr Ui.RevenirAuDirectL}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Ellipse Width="8" Height="8" Fill="{DynamicResource Live}" />
+                <TextBlock Text="{l:Tr Ui.RetourAuDirect}" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <!-- droite -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Classes="osd" Command="{Binding ToggleRecordCommand}" IsVisible="{Binding IsLive}" ToolTip.Tip="{l:Tr Ui.EnregistrerR}">
+              <Panel>
+                <Ellipse Width="16" Height="16" Stroke="White" StrokeThickness="2" IsVisible="{Binding !IsRecording}" />
+                <Ellipse Width="16" Height="16" Fill="{DynamicResource Live}" IsVisible="{Binding IsRecording}" />
+              </Panel>
+            </Button>
+            <Button Classes="osd" Command="{Binding ToggleTracksPanelCommand}" ToolTip.Tip="{l:Tr Ui.LangueAudioEtSousTitres}">
+              <TextBlock Classes="icon" Text="&#xE7F0;" />
+            </Button>
+            <Button Classes="osd" Command="{Binding CycleAspectCommand}" ToolTip.Tip="{l:Tr Ui.FormatDImage}">
+              <TextBlock Classes="icon" Text="&#xE799;" />
+            </Button>
+            <Button Classes="osd" Command="{Binding ToggleSidePanelCommand}" ToolTip.Tip="{l:Tr Ui.ListeDesChainesC}" IsVisible="{Binding IsLive}">
+              <TextBlock Classes="icon" Text="&#xE8FD;" />
+            </Button>
+            <Button Classes="osd" Command="{Binding ToggleSidePanelCommand}" ToolTip.Tip="{l:Tr Ui.Episodes}" IsVisible="{Binding HasEpisodes}">
+              <TextBlock Classes="icon" Text="&#xE8FD;" />
+            </Button>
+            <Button Classes="osd" x:Name="FullscreenButton" ToolTip.Tip="{l:Tr Ui.PleinEcranF}">
+              <TextBlock Classes="icon" x:Name="FullscreenGlyph" Text="&#xE740;" />
+            </Button>
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <!-- ───── Informations sur la lecture (menu du clic droit) ───── -->
+    <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,112,0,0" Width="420" CornerRadius="14" Padding="16,10,10,14"
+            Background="#E6121216" BorderBrush="#26FFFFFF" BorderThickness="1" IsVisible="{Binding IsStatsOpen}">
+      <StackPanel Spacing="6">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <TextBlock Classes="icon" Text="&#xE946;" FontSize="15" VerticalAlignment="Center" Margin="0,0,9,0" />
+          <TextBlock Grid.Column="1" Text="{l:Tr Ctx.Info}" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
+          <Button Grid.Column="2" Classes="osd" Width="32" Height="32" Command="{Binding ToggleStatsCommand}" ToolTip.Tip="{l:Tr Ui.Fermer}">
+            <TextBlock Classes="icon" Text="&#xE711;" FontSize="11" />
+          </Button>
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Stats}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:StatRow">
+              <Grid ColumnDefinitions="128,*" Margin="0,3">
+                <TextBlock Text="{Binding Label}" FontSize="12.5" Opacity="0.6" />
+                <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12.5" TextWrapping="Wrap" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+
+    <!-- ───── Pistes audio / sous-titres / sortie audio ───── -->
+    <ThemeVariantScope RequestedThemeVariant="Dark" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,26,96"
+                       IsVisible="{Binding IsTracksPanelOpen}">
+      <Border Width="840" CornerRadius="16" Padding="16" Background="#EB121216" BorderBrush="#26FFFFFF" BorderThickness="1">
+        <Grid ColumnDefinitions="*,16,*,16,*">
+          <StackPanel Spacing="4">
+            <TextBlock Text="{l:Tr Ui.Audio}" FontSize="12" FontWeight="SemiBold" Opacity="0.6" Margin="10,0,0,6" />
+            <TextBlock Text="{l:Tr Ui.AucunePiste}" Opacity="0.6" Margin="10,4" IsVisible="{Binding AudioTracks.Count, Converter={x:Static ctl:PlayerConv.IsZero}}" />
+            <ItemsControl ItemsSource="{Binding AudioTracks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TrackOption">
+                  <Button Classes="track" Command="{ReflectionBinding $parent[UserControl].DataContext.SelectAudioCommand}" CommandParameter="{Binding}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <TextBlock Classes="icon" Text="&#xE73E;" FontSize="13" Opacity="{Binding IsSelected, Converter={x:Static ctl:PlayerConv.VisibleOpacity}}" Foreground="{DynamicResource Accent}" />
+                      <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" MaxWidth="200" />
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+          <StackPanel Grid.Column="2" Spacing="4">
+            <TextBlock Text="{l:Tr Ui.SousTitres}" FontSize="12" FontWeight="SemiBold" Opacity="0.6" Margin="10,0,0,6" />
+            <ItemsControl ItemsSource="{Binding SubtitleTracks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TrackOption">
+                  <Button Classes="track" Command="{ReflectionBinding $parent[UserControl].DataContext.SelectSubtitleCommand}" CommandParameter="{Binding}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <TextBlock Classes="icon" Text="&#xE73E;" FontSize="13" Opacity="{Binding IsSelected, Converter={x:Static ctl:PlayerConv.VisibleOpacity}}" Foreground="{DynamicResource Accent}" />
+                      <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" MaxWidth="200" />
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+          <StackPanel Grid.Column="4" Spacing="4">
+            <TextBlock Text="{l:Tr Player.AudioOutput}" FontSize="12" FontWeight="SemiBold" Opacity="0.6" Margin="10,0,0,6" />
+            <ItemsControl ItemsSource="{Binding AudioDevices}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TrackOption">
+                  <Button Classes="track" Command="{ReflectionBinding $parent[UserControl].DataContext.SelectAudioDeviceCommand}" CommandParameter="{Binding}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <TextBlock Classes="icon" Text="&#xE73E;" FontSize="13" Opacity="{Binding IsSelected, Converter={x:Static ctl:PlayerConv.VisibleOpacity}}" Foreground="{DynamicResource Accent}" />
+                      <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" MaxWidth="200" ToolTip.Tip="{Binding Label}" />
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </ThemeVariantScope>
+
+    <!-- ───── Liste latérale : chaînes ou épisodes ───── -->
+    <ThemeVariantScope RequestedThemeVariant="Dark" HorizontalAlignment="Right" IsVisible="{Binding IsSidePanelOpen}">
+      <Border x:Name="SidePanel" Width="430" Background="#F20E0E12" BorderBrush="#22FFFFFF" BorderThickness="1,0,0,0">
+        <DockPanel Margin="14,46,10,14">
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="6,0,0,10">
+            <TextBlock Text="{Binding IsLive, Converter={x:Static ctl:PlayerConv.PanelTitle}}" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Classes="osd" Width="36" Height="36" Command="{Binding ToggleSidePanelCommand}">
+              <TextBlock Classes="icon" Text="&#xE711;" FontSize="12" />
+            </Button>
+          </Grid>
+          <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="4,0,6,10" IsVisible="{Binding IsLive}">
+            <ComboBox ItemsSource="{Binding PanelCategories}" SelectedItem="{Binding PanelCategory}" HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="core:Category">
+                  <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBox x:Name="PanelFilterBox" Text="{Binding PanelFilter}" Watermark="{l:Tr Player.FilterChannels}" />
+          </StackPanel>
+          <TextBlock DockPanel.Dock="Bottom" Text="{l:Tr Player.PanelHint}" FontSize="11.5" Opacity="0.55" TextWrapping="Wrap" Margin="6,8,6,0"
+                     IsVisible="{Binding IsLive}" />
+          <Panel>
+            <ListBox Classes="zap" x:Name="ZapList" ItemsSource="{Binding PanelChannels}" SelectedItem="{Binding PanelSelection}"
+                     IsVisible="{Binding IsLive}" Background="Transparent" KeyDown="OnZapListKeyDown">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="core:LiveChannel">
+                  <Grid ColumnDefinitions="56,*" Background="Transparent" Tapped="OnZapTapped" DoubleTapped="OnZapDoubleTapped">
+                    <Border Width="52" Height="38" CornerRadius="8" Background="#1FFFFFFF" ClipToBounds="True">
+                      <Panel>
+                        <TextBlock Text="{Binding Initials}" FontSize="12" FontWeight="Bold" Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="120" Stretch="Uniform" Margin="4" />
+                      </Panel>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="2">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Number}" Opacity="0.5" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Name, Converter={x:Static ctl:Conv.CleanName}}" FontWeight="SemiBold" FontSize="13.5" TextTrimming="CharacterEllipsis" MaxWidth="250" />
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource Live}" IsVisible="{Binding IsPlaying}" VerticalAlignment="Center" />
+                      </StackPanel>
+                      <TextBlock Text="{Binding NowTitle}" Opacity="0.7" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="300"
+                                 IsVisible="{Binding NowTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                      <ProgressBar Classes="thin" Value="{Binding NowProgress}" Maximum="100" Background="#33FFFFFF" Width="300" HorizontalAlignment="Left"
+                                   IsVisible="{Binding NowTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <ListBox Classes="zap" ItemsSource="{Binding ZapEpisodes}" SelectedItem="{Binding CurrentEpisode, Mode=OneWay}"
+                     IsVisible="{Binding IsVod}" Background="Transparent">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="core:Episode">
+                  <Grid ColumnDefinitions="112,*" Background="Transparent" DoubleTapped="OnEpisodeDoubleTapped">
+                    <Border Width="108" Height="61" CornerRadius="8" Background="#1FFFFFFF" ClipToBounds="True">
+                      <Panel>
+                        <TextBlock Text="{Binding Code}" FontSize="12" Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="220" Stretch="UniformToFill" />
+                        <ProgressBar Classes="thin" Value="{Binding Progress}" Maximum="100" VerticalAlignment="Bottom" Background="#55000000" CornerRadius="0" />
+                      </Panel>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="2">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding Code}" Opacity="0.6" FontSize="12" />
+                        <TextBlock Text="{Binding DurationText}" Opacity="0.5" FontSize="12" />
+                        <TextBlock Classes="icon" Text="&#xE73E;" FontSize="11" Foreground="{DynamicResource Success}" IsVisible="{Binding IsWatched}" />
+                      </StackPanel>
+                      <TextBlock Text="{Binding DisplayTitle}" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Plot}" Opacity="0.6" FontSize="11.5" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                 IsVisible="{Binding Plot, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Panel>
+        </DockPanel>
+      </Border>
+    </ThemeVariantScope>
+
+
+    <!-- ───── Épisode suivant ───── -->
+    <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,30,120" Width="380" CornerRadius="16" Padding="18"
+            Background="#F0141418" BorderBrush="#33FFFFFF" BorderThickness="1"
+            IsVisible="{Binding NextEpisode, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <StackPanel Spacing="10">
+        <TextBlock Text="{Binding NextEpisodeText}" Opacity="0.75" FontSize="13" />
+        <TextBlock FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap">
+          <TextBlock.Text>
+            <MultiBinding StringFormat="{}{0}  {1}">
+              <Binding Path="NextEpisode.Code" />
+              <Binding Path="NextEpisode.Title" />
+            </MultiBinding>
+          </TextBlock.Text>
+        </TextBlock>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Button Classes="accent" Command="{Binding PlayNextEpisodeCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Classes="icon" Text="&#xE768;" FontSize="13" Foreground="{DynamicResource OnAccent}" />
+              <TextBlock Text="{l:Tr Ui.LireMaintenant}" Foreground="{DynamicResource OnAccent}" />
+            </StackPanel>
+          </Button>
+          <Button Classes="osdText" Content="{l:Tr Ui.Annuler}" Command="{Binding CancelNextEpisodeCommand}" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+    </Panel>
+  </Grid>
+</UserControl>

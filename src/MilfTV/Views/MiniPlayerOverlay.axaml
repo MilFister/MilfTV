@@ -1,0 +1,152 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:MilfTV.Localization"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:ctl="using:MilfTV.Controls"
+             x:Class="MilfTV.Views.MiniPlayerOverlay"
+             x:DataType="vm:PlayerViewModel"
+             Foreground="White" Background="Transparent" Cursor="Hand">
+  <!-- Calque du mini-lecteur, posé sur la vidéo réduite.
+       Glisser : déplace le mini-lecteur (aimanté au coin le plus proche). Clic : lecteur complet.
+       Les commandes n'apparaissent qu'au survol. -->
+  <UserControl.Styles>
+    <Style Selector="Panel#Hud">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <!-- :is(…) et non « UserControl » : un sélecteur de type ne vise que ce type exact, pas MiniPlayerOverlay. -->
+    <Style Selector=":is(UserControl):pointerover Panel#Hud">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="Button.mini">
+      <Setter Property="Width" Value="34" />
+      <Setter Property="Height" Value="34" />
+      <Setter Property="CornerRadius" Value="17" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Background" Value="#59000000" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.mini:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#40FFFFFF" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.mini:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#66FFFFFF" />
+    </Style>
+    <Style Selector="Button.mini TextBlock.icon">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.mini.big">
+      <Setter Property="Width" Value="52" />
+      <Setter Property="Height" Value="52" />
+      <Setter Property="CornerRadius" Value="26" />
+    </Style>
+    <Style Selector="Button.mini.big TextBlock.icon">
+      <Setter Property="FontSize" Value="22" />
+    </Style>
+  </UserControl.Styles>
+
+  <Panel>
+    <!-- Chargement / mise en mémoire tampon -->
+    <Arc Classes="spinner white" Width="34" Height="34" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+      <Arc.IsVisible>
+        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+          <Binding Path="IsLoading" />
+          <Binding Path="IsBuffering" />
+        </MultiBinding>
+      </Arc.IsVisible>
+    </Arc>
+
+    <!-- Erreur : détails et « Réessayer » dans le lecteur complet -->
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" Margin="16" IsHitTestVisible="False"
+                IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Classes="icon" Text="&#xE7BA;" FontSize="24" Foreground="#FFB224" HorizontalAlignment="Center" />
+      <TextBlock Text="{l:Tr Ui.LectureImpossible}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+    </StackPanel>
+
+    <!-- Épisode suivant : visible même sans survol -->
+    <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="10,0,10,12" Padding="10,5" CornerRadius="12"
+            Background="#CC141418" IsHitTestVisible="False"
+            IsVisible="{Binding NextEpisode, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <TextBlock Text="{Binding NextEpisodeText}" FontSize="12" FontWeight="SemiBold" />
+    </Border>
+
+    <!-- Commandes au survol -->
+    <Panel x:Name="Hud">
+      <Border IsHitTestVisible="False">
+        <Border.Background>
+          <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#B3000000" Offset="0" />
+            <GradientStop Color="#1A000000" Offset="0.45" />
+            <GradientStop Color="#1A000000" Offset="0.6" />
+            <GradientStop Color="#B3000000" Offset="1" />
+          </LinearGradientBrush>
+        </Border.Background>
+      </Border>
+
+      <!-- Titre + agrandir / arrêter -->
+      <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Top" Margin="12,8,8,0">
+        <StackPanel VerticalAlignment="Center" Spacing="1" Margin="0,0,8,0">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <Border Classes="badge live" IsVisible="{Binding IsLive}" VerticalAlignment="Center">
+              <TextBlock Text="{l:Tr Ui.EnDirect}" />
+            </Border>
+            <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+          </StackPanel>
+          <TextBlock Text="{Binding Subtitle}" FontSize="11.5" Opacity="0.75" TextTrimming="CharacterEllipsis"
+                     IsVisible="{Binding Subtitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+          <Button Classes="mini" Command="{Binding ExpandMiniCommand}" ToolTip.Tip="{l:Tr Mini.Expand}">
+            <TextBlock Classes="icon" Text="&#xEE47;" />
+          </Button>
+          <Button Classes="mini" Command="{Binding CloseCommand}" ToolTip.Tip="{l:Tr Player.StopPlayback}">
+            <TextBlock Classes="icon" Text="&#xE711;" />
+          </Button>
+        </StackPanel>
+      </Grid>
+
+      <!-- Lecture / pause et sauts -->
+      <StackPanel Orientation="Horizontal" Spacing="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Button Classes="mini" Command="{Binding SeekByCommand}" CommandParameter="-10" ToolTip.Tip="{l:Tr Ui.ReculerDe10S}">
+          <TextBlock Classes="icon" Text="&#xED3C;" />
+        </Button>
+        <Button Classes="mini big" Command="{Binding TogglePauseCommand}" ToolTip.Tip="{l:Tr Ui.LecturePauseEspace}">
+          <TextBlock Classes="icon" Text="{Binding IsPaused, Converter={x:Static ctl:Conv.PlayPauseGlyph}}" />
+        </Button>
+        <Button Classes="mini" Command="{Binding SeekByCommand}" CommandParameter="30" ToolTip.Tip="{l:Tr Ui.AvancerDe30S}">
+          <TextBlock Classes="icon" Text="&#xED3D;" />
+        </Button>
+      </StackPanel>
+
+      <!-- Bas : son, position, progression -->
+      <StackPanel VerticalAlignment="Bottom" Margin="10,0,18,8" Spacing="4">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button Classes="mini" Width="30" Height="30" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="{l:Tr Ui.SonM}">
+            <TextBlock Classes="icon" Text="{Binding IsMuted, Converter={x:Static ctl:Conv.MuteGlyph}}" FontSize="13" />
+          </Button>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" IsHitTestVisible="False">
+            <TextBlock Text="{Binding PositionText}" FontSize="11.5" Opacity="0.9" />
+            <TextBlock Text="{Binding DurationText, StringFormat='/ {0}'}" FontSize="11.5" Opacity="0.65"
+                       IsVisible="{Binding DurationText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+        </Grid>
+        <ProgressBar Classes="thin" Minimum="{Binding RangeStart}" Maximum="{Binding RangeEnd}" Value="{Binding Position}"
+                     Background="#40FFFFFF" IsHitTestVisible="False" />
+      </StackPanel>
+
+      <!-- Poignée : on peut tirer les bords et les coins pour redimensionner -->
+      <Path HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,4,4" Width="11" Height="11" IsHitTestVisible="False"
+            Stroke="#CCFFFFFF" StrokeThickness="1.4" StrokeLineCap="Round" Data="M 10,2 L 2,10 M 10,6 L 6,10" />
+    </Panel>
+  </Panel>
+</UserControl>

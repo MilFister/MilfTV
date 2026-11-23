@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:img="using:MilfTV.Images"
+             x:Class="MilfTV.Views.ChannelTile"
+             x:DataType="core:LiveChannel">
+  <Border Classes="poster" Height="150" Background="{DynamicResource Surface}" BorderThickness="1" BorderBrush="{DynamicResource BorderSubtle}" CornerRadius="16">
+    <Grid RowDefinitions="*,Auto" Margin="14,12">
+      <Panel>
+        <TextBlock Text="{Binding Initials}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource PlaceholderText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="200" Stretch="Uniform" MaxHeight="58" Margin="10,2" />
+        <Ellipse Width="8" Height="8" Fill="{DynamicResource Live}" HorizontalAlignment="Right" VerticalAlignment="Top" IsVisible="{Binding IsPlaying}" />
+      </Panel>
+      <StackPanel Grid.Row="1" Spacing="3">
+        <TextBlock Text="{Binding Name, Converter={x:Static ctl:Conv.CleanName}}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding NowTitle, FallbackValue=' '}" Classes="faint" FontSize="11.5" TextTrimming="CharacterEllipsis" />
+        <ProgressBar Classes="thin" Value="{Binding NowProgress}" Maximum="100" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>

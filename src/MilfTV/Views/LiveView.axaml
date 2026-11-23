@@ -1,0 +1,179 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:img="using:MilfTV.Images"
+             x:Class="MilfTV.Views.LiveView"
+             x:DataType="vm:LiveViewModel">
+  <Grid x:Name="LayoutRoot" ColumnDefinitions="270,*,400" Margin="16,4,16,16">
+
+    <!-- ── Catégories ── -->
+    <Border Classes="panel" Padding="10,14,6,10">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Spacing="10" Margin="6,0,8,8">
+          <TextBlock Classes="h3" Text="{l:Tr Ui.Categories}" />
+          <TextBox Text="{Binding CategoryFilter}" Watermark="{l:Tr Ui.Filtrer}" MinHeight="34" Padding="10,6" />
+        </StackPanel>
+        <ListBox Classes="clean" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="core:Category">
+              <Grid ColumnDefinitions="*,Auto,Auto" Background="Transparent">
+                <Grid.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="{l:Tr Ui.VerrouillerDeverrouillerControleParental}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.ToggleCategoryLockCommand}" CommandParameter="{Binding}" />
+                  </ContextMenu>
+                </Grid.ContextMenu>
+                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontSize="13.5" />
+                <TextBlock Grid.Column="1" Classes="icon" Text="&#xE72E;" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="6,0,0,0" IsVisible="{Binding IsLocked}" />
+                <TextBlock Grid.Column="2" Text="{Binding Count, Converter={x:Static ctl:Conv.Count}}" Classes="faint" FontSize="12" Margin="8,0,2,0" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+
+    <!-- ── Chaînes ── -->
+    <DockPanel Grid.Column="1" Margin="16,0">
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="4,4,0,12">
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Classes="h1" Text="{Binding SelectedCategory.Name, FallbackValue=''}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="muted" Text="{Binding ChannelCountText}" Margin="1,2,0,0" />
+        </StackPanel>
+        <Panel Grid.Column="1" Width="250" VerticalAlignment="Center">
+          <TextBox Text="{Binding Filter}" Watermark="{l:Tr Ui.ChercherDansLaListe}" Padding="34,8,12,8" />
+          <TextBlock Classes="icon" Text="&#xE721;" FontSize="13" HorizontalAlignment="Left" Margin="12,0,0,0" Foreground="{DynamicResource TextMuted}" IsHitTestVisible="False" />
+        </Panel>
+      </Grid>
+      <Panel>
+        <ListBox x:Name="ChannelList" Classes="clean" ItemsSource="{Binding Channels}" SelectedItem="{Binding SelectedChannel}"
+                 DoubleTapped="OnChannelDoubleTapped" KeyDown="OnChannelKeyDown">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="core:LiveChannel">
+              <Grid ColumnDefinitions="40,70,*,Auto" Height="54" Background="Transparent">
+                <TextBlock Text="{Binding Number}" Classes="faint" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                <Border Grid.Column="1" Width="62" Height="44" CornerRadius="9" Background="{DynamicResource Placeholder}" ClipToBounds="True">
+                  <Panel>
+                    <TextBlock Text="{Binding Initials}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource PlaceholderText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="140" Stretch="Uniform" Margin="5" />
+                  </Panel>
+                </Border>
+                <StackPanel Grid.Column="2" Margin="14,0,8,0" VerticalAlignment="Center" Spacing="3">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Name, Converter={x:Static ctl:Conv.CleanName}}" FontWeight="SemiBold" FontSize="14" TextTrimming="CharacterEllipsis" />
+                    <Border Classes="badge live" IsVisible="{Binding IsRecording}">
+                      <TextBlock Text="REC" />
+                    </Border>
+                  </StackPanel>
+                  <Grid ColumnDefinitions="Auto,*" IsVisible="{Binding NowTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <ProgressBar Classes="thin" Width="54" Value="{Binding NowProgress}" Maximum="100" VerticalAlignment="Center" Margin="0,1,8,0" />
+                    <TextBlock Grid.Column="1" Text="{Binding NowTitle}" Classes="caption" TextTrimming="CharacterEllipsis" />
+                  </Grid>
+                </StackPanel>
+                <Button Grid.Column="3" Classes="icon" Width="34" Height="34" ToolTip.Tip="{l:Tr Ui.Favori}"
+                        Command="{ReflectionBinding $parent[UserControl].DataContext.ToggleFavoriteCommand}" CommandParameter="{Binding}">
+                  <TextBlock Classes="icon" FontSize="14" Text="{Binding IsFavorite, Converter={x:Static ctl:Conv.HeartGlyph}}"
+                             Foreground="{DynamicResource Accent}" />
+                </Button>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8"
+                    IsVisible="{Binding Channels.Count, Converter={x:Static ctl:Conv.IsZero}}">
+          <TextBlock Classes="icon" Text="&#xE7F4;" FontSize="36" Foreground="{DynamicResource TextMuted}" />
+          <TextBlock Classes="muted" Text="{l:Tr Ui.AucuneChaineIci}" HorizontalAlignment="Center" />
+        </StackPanel>
+      </Panel>
+    </DockPanel>
+
+    <!-- ── Fiche de la chaîne ── -->
+    <Border x:Name="InfoPanel" Grid.Column="2" Classes="panel" Padding="22">
+      <Panel>
+        <ScrollViewer IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <StackPanel Spacing="18">
+            <Grid ColumnDefinitions="Auto,*">
+              <Border Width="104" Height="74" CornerRadius="14" Background="{DynamicResource Placeholder}" ClipToBounds="True">
+                <Panel>
+                  <TextBlock Text="{Binding SelectedChannel.Initials}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PlaceholderText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <Image img:ImageLoader.Source="{Binding SelectedChannel.ImageUrl}" img:ImageLoader.DecodeWidth="220" Stretch="Uniform" Margin="8" />
+                </Panel>
+              </Border>
+              <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center" Spacing="2">
+                <TextBlock Classes="h2" Text="{Binding SelectedChannel.Name, Converter={x:Static ctl:Conv.CleanName}}" TextWrapping="Wrap" MaxLines="2" />
+                <TextBlock Classes="faint" FontSize="13" Text="{Binding SelectedChannel.Number, Converter={x:Static l:Loc.Format}, ConverterParameter=Player.ChannelNumber}" />
+              </StackPanel>
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button Classes="accent" Command="{Binding PlayCommand}" CommandParameter="{x:Null}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Classes="icon" Text="&#xE768;" FontSize="14" Foreground="{DynamicResource OnAccent}" />
+                  <TextBlock Text="{l:Tr Ui.Regarder}" Foreground="{DynamicResource OnAccent}" />
+                </StackPanel>
+              </Button>
+              <Button Classes="soft" Command="{Binding ToggleFavoriteCommand}" CommandParameter="{x:Null}" ToolTip.Tip="{l:Tr Ui.Favori}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Classes="icon" FontSize="14" Text="{Binding SelectedChannel.IsFavorite, Converter={x:Static ctl:Conv.HeartGlyph}, FallbackValue=&#xEB51;}" Foreground="{DynamicResource Accent}" />
+                  <TextBlock Text="{l:Tr Ui.Favori}" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+
+            <!-- En ce moment -->
+            <Border Classes="card" Padding="16" IsVisible="{Binding NowProgram, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <StackPanel Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Border Classes="badge live"><TextBlock Text="{l:Tr Ui.EnCeMoment}" /></Border>
+                  <TextBlock Classes="caption" Text="{Binding NowProgram.Program.TimeRange}" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Classes="h3" FontSize="17" Text="{Binding NowProgram.Title}" TextWrapping="Wrap" />
+                <ProgressBar Classes="thin" Value="{Binding NowProgram.Progress}" Maximum="100" />
+                <TextBlock Classes="muted" FontSize="13" Text="{Binding NowProgram.Description}" TextWrapping="Wrap" MaxLines="7" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding NowProgram.Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <Button Classes="flat" HorizontalAlignment="Left" Padding="8,5" Margin="-8,0,0,0"
+                        Command="{Binding RecordCommand}" CommandParameter="{Binding NowProgram}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Ellipse Width="10" Height="10" Fill="{DynamicResource Live}" />
+                    <TextBlock Text="{l:Tr Ui.EnregistrerCeProgramme}" FontSize="13" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Border>
+
+            <!-- À suivre -->
+            <StackPanel Spacing="4" IsVisible="{Binding Upcoming.Count, Converter={x:Static ctl:Conv.NonZero}}">
+              <TextBlock Classes="section" Text="{l:Tr Ui.ASuivre}" Margin="2,0,0,4" />
+              <ItemsControl ItemsSource="{Binding Upcoming}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ProgramRow">
+                    <Grid ColumnDefinitions="54,*,Auto" Margin="0,3">
+                      <TextBlock Text="{Binding Time}" FontWeight="SemiBold" FontSize="13" Margin="2,2,0,0" />
+                      <StackPanel Grid.Column="1" Spacing="1">
+                        <TextBlock Text="{Binding Title}" FontSize="13.5" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Duration}" Classes="faint" FontSize="12" />
+                      </StackPanel>
+                      <Button Grid.Column="2" Classes="icon" Width="32" Height="32" ToolTip.Tip="{l:Tr Ui.ProgrammerLEnregistrement}"
+                              Command="{ReflectionBinding $parent[UserControl].DataContext.RecordCommand}" CommandParameter="{Binding}">
+                        <Ellipse Width="10" Height="10" Stroke="{DynamicResource Live}" StrokeThickness="2" />
+                      </Button>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <StackPanel Spacing="6" IsVisible="{Binding HasNoEpg}" Margin="0,6,0,0">
+              <TextBlock Classes="icon" Text="&#xE787;" FontSize="26" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Left" />
+              <TextBlock Classes="muted" TextWrapping="Wrap" Text="{l:Tr Ui.PasDeProgrammeDisponiblePour}" />
+            </StackPanel>
+            <Arc Classes="spinner small" HorizontalAlignment="Left" IsVisible="{Binding DetailsLoading}" />
+          </StackPanel>
+        </ScrollViewer>
+      </Panel>
+    </Border>
+  </Grid>
+</UserControl>

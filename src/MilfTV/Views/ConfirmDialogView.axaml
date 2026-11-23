@@ -1,0 +1,17 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             x:Class="MilfTV.Views.ConfirmDialogView"
+             x:DataType="vm:ConfirmDialogViewModel">
+  <Border Classes="card" Width="440" Padding="26" Background="{DynamicResource SurfaceRaised}" BoxShadow="0 24 60 0 #66000000">
+    <StackPanel Spacing="14">
+      <TextBlock Classes="h2" Text="{Binding DialogTitle}" />
+      <TextBlock Classes="muted" Text="{Binding Message}" TextWrapping="Wrap" />
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,8,0,0">
+        <Button Classes="flat" Content="{l:Tr Ui.Annuler}" Command="{Binding CancelCommand}" />
+        <Button Classes="danger" Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" IsDefault="True" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

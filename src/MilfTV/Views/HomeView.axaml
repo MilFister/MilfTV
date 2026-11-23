@@ -1,0 +1,388 @@
+<UserControl xmlns:l="using:MilfTV.Localization"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:core="using:MilfTV.Core"
+             xmlns:data="using:MilfTV.Data"
+             xmlns:ctl="using:MilfTV.Controls"
+             xmlns:img="using:MilfTV.Images"
+             xmlns:v="using:MilfTV.Views"
+             x:Class="MilfTV.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+  <UserControl.Styles>
+    <Style Selector="ScrollViewer.row">
+      <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+      <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+      <Setter Property="Margin" Value="-8,0" />
+      <Setter Property="Padding" Value="8,6,8,14" />
+    </Style>
+    <Style Selector="Grid.rowHeader">
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+    <Style Selector="Border.tile">
+      <Setter Property="Background" Value="{DynamicResource Surface}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="16" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Button.cardButton:pointerover Border.tile">
+      <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+      <Setter Property="RenderTransform" Value="scale(1.03)" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer x:Name="MainScroll">
+    <Grid Margin="24,2,24,36" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+
+      <!-- ═══ Mise en avant ═══ -->
+      <Border Height="380" CornerRadius="24" ClipToBounds="True" Background="{DynamicResource Surface}" IsVisible="{Binding HasHero}" Grid.Row="{Binding RowHero}" Margin="0,0,0,30">
+        <Panel>
+          <Image img:ImageLoader.Source="{Binding HeroImage}" img:ImageLoader.DecodeWidth="400" Stretch="UniformToFill" Opacity="0.55">
+            <Image.Effect>
+              <BlurEffect Radius="50" />
+            </Image.Effect>
+          </Image>
+          <Image img:ImageLoader.Source="{Binding HeroBackdrop}" img:ImageLoader.DecodeWidth="1600" Stretch="UniformToFill" />
+          <Border>
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Color="#F2000000" Offset="0" />
+                <GradientStop Color="#99000000" Offset="0.45" />
+                <GradientStop Color="#00000000" Offset="0.85" />
+              </LinearGradientBrush>
+            </Border.Background>
+          </Border>
+          <Grid ColumnDefinitions="*,Auto" Margin="44,36">
+            <StackPanel VerticalAlignment="Center" Spacing="14" MaxWidth="640" HorizontalAlignment="Left">
+              <Border Classes="badge accent" HorizontalAlignment="Left">
+                <TextBlock Text="{Binding HeroBadge}" />
+              </Border>
+              <TextBlock Text="{Binding HeroTitle}" FontFamily="{StaticResource DisplayFont}" FontSize="40" FontWeight="Bold" Foreground="White"
+                         TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{Binding HeroMeta}" Foreground="#DDFFFFFF" FontSize="14" />
+              <TextBlock Text="{Binding HeroPlot}" Foreground="#CCFFFFFF" FontSize="14.5" TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis"
+                         IsVisible="{Binding HeroPlot, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" LineHeight="22" />
+              <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,6,0,0">
+                <Button Classes="accent" Command="{Binding PlayHeroCommand}" Padding="22,12">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Classes="icon" Text="&#xE768;" FontSize="15" Foreground="{DynamicResource OnAccent}" />
+                    <TextBlock Text="{l:Tr Ui.Regarder}" FontSize="15" Foreground="{DynamicResource OnAccent}" />
+                  </StackPanel>
+                </Button>
+                <Button Classes="osdText" Command="{Binding OpenHeroCommand}" Padding="20,12" CornerRadius="12">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Classes="icon" Text="&#xE946;" FontSize="15" Foreground="White" />
+                    <TextBlock Text="{l:Tr Ui.PlusDInfos}" FontSize="15" Foreground="White" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </StackPanel>
+            <Border Grid.Column="1" Width="200" Height="300" CornerRadius="16" ClipToBounds="True" VerticalAlignment="Center"
+                    BoxShadow="0 20 50 0 #88000000" IsVisible="{Binding HeroBackdrop, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+              <Image img:ImageLoader.Source="{Binding HeroImage}" img:ImageLoader.DecodeWidth="400" Stretch="UniformToFill" />
+            </Border>
+          </Grid>
+        </Panel>
+      </Border>
+
+      <!-- ═══ Salutation ═══ -->
+      <StackPanel Grid.Row="0" Spacing="2" Margin="2,0,0,26">
+        <TextBlock Classes="h1" Text="{Binding Greeting}" />
+        <TextBlock Classes="muted" Text="{Binding Stats}" />
+      </StackPanel>
+
+      <!-- ═══ Reprendre la lecture ═══ -->
+      <StackPanel IsVisible="{Binding HasContinue}" Grid.Row="{Binding RowContinue}" Margin="0,0,0,30">
+        <TextBlock Classes="h2" Text="{l:Tr Ui.ReprendreLaLecture}" Margin="2,0,0,8" />
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding ContinueWatching}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="16" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="data:WatchEntry">
+                <Button Classes="cardButton" Width="300" Command="{ReflectionBinding $parent[UserControl].DataContext.ResumeCommand}" CommandParameter="{Binding}">
+                  <Button.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="{l:Tr Ui.RetirerDeReprendreLaLecture}" Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveContinueCommand}" CommandParameter="{Binding}" />
+                    </ContextMenu>
+                  </Button.ContextMenu>
+                  <StackPanel Spacing="8">
+                    <Border Classes="poster" Height="168">
+                      <Panel>
+                        <Image img:ImageLoader.Source="{Binding ImageUrl}" img:ImageLoader.DecodeWidth="420" Stretch="UniformToFill" />
+                        <Border>
+                          <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,40%" EndPoint="0%,100%">
+                              <GradientStop Color="#00000000" Offset="0" />
+                              <GradientStop Color="#D9000000" Offset="1" />
+                            </LinearGradientBrush>
+                          </Border.Background>
+                        </Border>
+                        <Border Classes="hoverPlay" Background="#40000000">
+                          <Border Width="50" Height="50" CornerRadius="25" Background="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Classes="icon" Text="&#xE768;" FontSize="18" Foreground="{DynamicResource OnAccent}" Margin="3,0,0,0" />
+                          </Border>
+                        </Border>
+                        <StackPanel VerticalAlignment="Bottom" Margin="12,0,12,12" Spacing="6">
+                          <TextBlock Text="{Binding RemainingText}" Foreground="#DDFFFFFF" FontSize="12" />
+                          <ProgressBar Classes="thin" Value="{Binding Progress}" Maximum="100" Background="#40FFFFFF" />
+                        </StackPanel>
+                      </Panel>
+                    </Border>
+                    <StackPanel Margin="2,0" Spacing="1">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Subtitle}" Classes="faint" FontSize="12" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <!-- ═══ Séries en cours (profil) ═══ -->
+      <StackPanel IsVisible="{Binding HasSeriesInProgress}" Grid.Row="{Binding RowSeries}" Margin="0,0,0,30">
+        <TextBlock Classes="h2" Text="{l:Tr Home.SeriesInProgress}" Margin="2,0,0,8" />
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding SeriesInProgress}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:SeriesProgress">
+                <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenSeriesCommand}" CommandParameter="{Binding}">
+                  <StackPanel Spacing="8">
+                    <Border Classes="poster" Height="246">
+                      <Panel>
+                        <TextBlock Text="{Binding Series.Initials}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PlaceholderText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Image img:ImageLoader.Source="{Binding Series.ImageUrl}" img:ImageLoader.DecodeWidth="320" Stretch="UniformToFill" />
+                        <Border Classes="hoverPlay" Background="#59000000">
+                          <Border Width="54" Height="54" CornerRadius="27" Background="{DynamicResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Classes="icon" Text="&#xE768;" FontSize="20" Foreground="{DynamicResource OnAccent}" Margin="3,0,0,0" />
+                          </Border>
+                        </Border>
+                        <ProgressBar Classes="thin" Value="{Binding Progress}" Maximum="100" VerticalAlignment="Bottom" CornerRadius="0" Height="4" Background="#66000000" />
+                      </Panel>
+                    </Border>
+                    <StackPanel Spacing="1" Margin="2,0">
+                      <TextBlock Text="{Binding Series.Name, Converter={x:Static ctl:Conv.PosterTitle}}" FontWeight="SemiBold" FontSize="13.5" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Label}" Classes="faint" FontSize="12" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <StackPanel IsVisible="{Binding HasMyList}" Grid.Row="{Binding RowMyList}" Margin="0,0,0,30">
+        <TextBlock Classes="h2" Text="{l:Tr Home.MyList}" Margin="2,0,0,8" />
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding MyList}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:CatalogItem">
+                <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+                  <v:PosterCard />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <StackPanel IsVisible="{Binding HasRecommended}" Grid.Row="{Binding RowRecommended}" Margin="0,0,0,30">
+        <TextBlock Classes="h2" Text="{l:Tr Home.Recommended}" Margin="2,0,0,8" />
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding Recommended}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:CatalogItem">
+                <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+                  <v:PosterCard />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <StackPanel IsVisible="{Binding HasBecause1}" Grid.Row="{Binding RowBecause}" Margin="0,0,0,30">
+        <TextBlock Classes="h2" Text="{Binding Because1Title}" Margin="2,0,0,8" />
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding Because1}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:CatalogItem">
+                <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+                  <v:PosterCard />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <StackPanel IsVisible="{Binding HasBecause2}" Grid.Row="{Binding RowBecause2}" Margin="0,0,0,30">
+        <TextBlock Classes="h2" Text="{Binding Because2Title}" Margin="2,0,0,8" />
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding Because2}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:CatalogItem">
+                <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+                  <v:PosterCard />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <!-- ═══ Chaînes favorites ═══ -->
+      <StackPanel IsVisible="{Binding HasFavoriteChannels}" Grid.Row="{Binding RowFavChannels}" Margin="0,0,0,30">
+        <Grid Classes="rowHeader" ColumnDefinitions="*,Auto">
+          <TextBlock Classes="h2" Text="{l:Tr Ui.VosChainesFavorites}" Margin="2,0,0,0" />
+          <Button Grid.Column="1" Classes="flat" Content="{l:Tr Ui.ToutVoir}" Command="{Binding GoCommand}" CommandParameter="favorites" Foreground="{DynamicResource Accent}" />
+        </Grid>
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding FavoriteChannels}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="14" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:LiveChannel">
+                <Button Classes="cardButton" Width="220" Command="{ReflectionBinding $parent[UserControl].DataContext.PlayChannelCommand}" CommandParameter="{Binding}">
+                  <v:ChannelTile />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <!-- ═══ Récemment regardées ═══ -->
+      <StackPanel IsVisible="{Binding HasRecentChannels}" Grid.Row="{Binding RowRecentChannels}" Margin="0,0,0,30">
+        <TextBlock Classes="h2" Text="{l:Tr Ui.ChainesRecemmentRegardees}" Margin="2,0,0,8" />
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding RecentChannels}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="14" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:LiveChannel">
+                <Button Classes="cardButton" Width="220" Command="{ReflectionBinding $parent[UserControl].DataContext.PlayChannelCommand}" CommandParameter="{Binding}">
+                  <v:ChannelTile />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <!-- ═══ Films récents ═══ -->
+      <StackPanel IsVisible="{Binding HasRecentMovies}" Grid.Row="{Binding RowRecentMovies}" Margin="0,0,0,30">
+        <Grid Classes="rowHeader" ColumnDefinitions="*,Auto">
+          <TextBlock Classes="h2" Text="{l:Tr Ui.FilmsAjoutesRecemment}" Margin="2,0,0,0" />
+          <Button Grid.Column="1" Classes="flat" Content="{l:Tr Ui.TousLesFilms}" Command="{Binding GoCommand}" CommandParameter="movies" Foreground="{DynamicResource Accent}" />
+        </Grid>
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding RecentMovies}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:Movie">
+                <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+                  <v:PosterCard />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <!-- ═══ Séries récentes ═══ -->
+      <StackPanel IsVisible="{Binding HasRecentSeries}" Grid.Row="{Binding RowRecentSeries}" Margin="0,0,0,30">
+        <Grid Classes="rowHeader" ColumnDefinitions="*,Auto">
+          <TextBlock Classes="h2" Text="{l:Tr Ui.SeriesAjouteesRecemment}" Margin="2,0,0,0" />
+          <Button Grid.Column="1" Classes="flat" Content="{l:Tr Ui.ToutesLesSeries}" Command="{Binding GoCommand}" CommandParameter="series" Foreground="{DynamicResource Accent}" />
+        </Grid>
+        <ScrollViewer Classes="row">
+          <ItemsControl ItemsSource="{Binding RecentSeries}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="core:Series">
+                <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
+                  <v:PosterCard />
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+
+      <!-- ═══ Accès rapides si peu de contenu ═══ -->
+      <Grid ColumnDefinitions="*,16,*,16,*" Height="120" Grid.Row="{Binding RowQuick}" Margin="0,0,0,30">
+        <Button Classes="cardButton" HorizontalAlignment="Stretch" Command="{Binding GoCommand}" CommandParameter="live">
+          <Border Classes="tile" Padding="22">
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+              <Border Width="52" Height="52" CornerRadius="16" Background="{DynamicResource AccentSoft}">
+                <TextBlock Classes="icon" Text="&#xE7F4;" FontSize="22" Foreground="{DynamicResource Accent}" />
+              </Border>
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="h3" FontSize="16" Text="{l:Tr Ui.TvEnDirect}" />
+                <TextBlock Classes="caption" Text="{l:Tr Ui.ToutesVosChaines}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </Button>
+        <Button Grid.Column="2" Classes="cardButton" HorizontalAlignment="Stretch" Command="{Binding GoCommand}" CommandParameter="guide">
+          <Border Classes="tile" Padding="22">
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+              <Border Width="52" Height="52" CornerRadius="16" Background="{DynamicResource AccentSoft}">
+                <TextBlock Classes="icon" Text="&#xE787;" FontSize="22" Foreground="{DynamicResource Accent}" />
+              </Border>
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="h3" FontSize="16" Text="{l:Tr Ui.GuideTv}" />
+                <TextBlock Classes="caption" Text="{l:Tr Ui.ProgrammesDeLaSemaine}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </Button>
+        <Button Grid.Column="4" Classes="cardButton" HorizontalAlignment="Stretch" Command="{Binding GoCommand}" CommandParameter="movies">
+          <Border Classes="tile" Padding="22">
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+              <Border Width="52" Height="52" CornerRadius="16" Background="{DynamicResource AccentSoft}">
+                <TextBlock Classes="icon" Text="&#xE8B2;" FontSize="22" Foreground="{DynamicResource Accent}" />
+              </Border>
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock Classes="h3" FontSize="16" Text="{l:Tr Ui.FilmsEtSeries}" />
+                <TextBlock Classes="caption" Text="{l:Tr Ui.VotreVideotheque}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </Button>
+      </Grid>
+    </Grid>
+  </ScrollViewer>
+</UserControl>
