@@ -28,6 +28,14 @@ param(
     # Canal : stable (versions publiees) ou beta (nouveautes en avance).
     [ValidateSet('stable', 'beta')]
     [string]$Channel = 'stable',
+    # Architecture : x64 (par defaut) ou arm64 (PC Windows sur ARM : Snapdragon...). Les copies ARM64 ont leurs propres
+    # canaux de mise a jour (win-arm64, beta-arm64) et leurs fichiers (MilfTV.App-beta-arm64-Setup.exe...).
+    [ValidateSet('x64', 'arm64')]
+    [string]$Arch = 'x64',
+    # Architectures dont les fichiers sont listes sur la page de la version (on publie x64, puis arm64 qui s'y ajoute).
+    [string[]]$ReleaseArch = @('x64', 'arm64'),
+    # Ajoute les fichiers a une version GitHub deja publiee (automatique pour arm64).
+    [switch]$Merge,
     # Depot GitHub des versions : active les mises a jour automatiques des copies installees.
     [string]$UpdateRepo = "",
     # Identifiant d'installation. Ne pas utiliser "MilfTV" : l'application s'installerait dans
@@ -36,7 +44,8 @@ param(
     [string]$Title = "MilfTV",
     [string]$Authors = "MilfTV",
     # Raccourcis crees a l'installation : Desktop, StartMenuRoot, StartMenu, Startup (separes par des virgules).
-    [string]$Shortcuts = "Desktop,StartMenuRoot",
+    # Le bureau n'est pas dans la liste : MilfTV propose ce raccourci au premier lancement (Core/DesktopShortcut.cs).
+    [string]$Shortcuts = "StartMenuRoot",
     # Signature (facultative) : parametres signtool, ou fichier metadata.json d'Azure Artifact Signing.
     [string]$SignParams = $env:MILFTV_SIGN_PARAMS,
     [string]$AzureSignFile = $env:MILFTV_AZURE_SIGN_FILE,
@@ -44,7 +53,9 @@ param(
     # Publie la version sur GitHub (Releases) ; necessite $env:GITHUB_TOKEN (droit contents:write).
     [switch]$Upload,
     # Branche dont la version porte l'etiquette (tag) : par defaut Beta pour une beta, main pour une stable.
-    [string]$Branch
+    [string]$Branch,
+    # Garde les outils de test (scenarios MILFTV_DEV) dans la publication : pour les tests locaux seulement.
+    [switch]$DevTools
 )
 
 $ErrorActionPreference = 'Stop'
@@ -52,22 +63,28 @@ $root = Split-Path -Parent $PSScriptRoot
 $proj = Join-Path $root 'src\MilfTV\MilfTV.csproj'
 if (-not $Version) { $Version = (Select-Xml -Path $proj -XPath '//Version').Node.InnerText }
 if (-not $OutDir) { $OutDir = Join-Path $root 'artifacts\releases' }
-$pub = Join-Path $root "artifacts\publish\$Version"
+$rid = "win-$Arch"
+$pub = if ($Arch -eq 'x64') { Join-Path $root "artifacts\publish\$Version" } else { Join-Path $root "artifacts\publish\$Version-$Arch" }
 # Canal Velopack : 'win' (canal par defaut sous Windows) pour les versions stables, 'beta' pour les betas.
-$vpkChannel = if ($Channel -eq 'beta') { 'beta' } else { 'win' }
+$baseChannel = if ($Channel -eq 'beta') { 'beta' } else { 'win' }
+$vpkChannel = if ($Arch -eq 'x64') { $baseChannel } else { "$baseChannel-$Arch" }
 if (-not $Branch) { $Branch = if ($Channel -eq 'beta') { 'Beta' } else { 'main' } }
 if ($Channel -eq 'beta' -and $Version -notmatch '-') { throw "Une version beta doit avoir un suffixe de pre-version, par exemple 1.9.0-beta.1." }
 if ($Channel -eq 'stable' -and $Version -match '-') { throw "Une version stable n'a pas de suffixe ($Version) : utilisez -Channel beta." }
 
+$nativeDir = if ($Arch -eq 'x64') { 'native' } else { "native\$Arch" }
 foreach ($f in 'libmpv-2.dll', 'vulkan-1.dll') {
-    if (-not (Test-Path (Join-Path $root "native\$f"))) { throw "native\$f est absent : voir la section Build du README." }
+    if (-not (Test-Path (Join-Path $root "$nativeDir\$f"))) { throw "$nativeDir\$f est absent : voir la section Build du README." }
 }
 if (-not $UpdateRepo) { Write-Warning "Sans -UpdateRepo, cette version ne cherchera pas de mises a jour." }
 if ($Upload -and -not $env:GITHUB_TOKEN) { throw "-Upload : definissez d'abord `$env:GITHUB_TOKEN (jeton GitHub avec le droit contents:write)." }
 
-Write-Host "== Publication de MilfTV $Version" -ForegroundColor Cyan
+Write-Host "== Publication de MilfTV $Version ($Arch)" -ForegroundColor Cyan
 if (Test-Path $pub) { Remove-Item $pub -Recurse -Force }
-dotnet publish $proj -c Release -r win-x64 -o $pub "-p:Version=$Version" "-p:UpdateRepo=$UpdateRepo" -nologo
+# Outils de test retires des versions publiees, sauf demande explicite (-DevTools) pour tester une publication.
+if ($DevTools -and $Upload) { throw "-DevTools et -Upload ensemble : une version publiee ne doit pas contenir les outils de test." }
+$devToolsValue = if ($DevTools) { 'true' } else { 'false' }
+dotnet publish $proj -c Release -r $rid -o $pub "-p:Version=$Version" "-p:UpdateRepo=$UpdateRepo" "-p:DevTools=$devToolsValue" -nologo
 if ($LASTEXITCODE) { throw "dotnet publish a echoue." }
 
 Push-Location $root
@@ -86,7 +103,7 @@ try {
     }
 
     Write-Host "== Installateur et paquets de mise a jour" -ForegroundColor Cyan
-    $pack = @('vpk', 'pack', '-u', $PackId, '-v', $Version, '-c', $vpkChannel, '-r', 'win-x64', '-p', $pub, '-e', 'MilfTV.exe', '-o', $OutDir,
+    $pack = @('vpk', 'pack', '-u', $PackId, '-v', $Version, '-c', $vpkChannel, '-r', $rid, '-p', $pub, '-e', 'MilfTV.exe', '-o', $OutDir,
         '--packTitle', $Title, '--packAuthors', $Authors,
         '--icon', (Join-Path $root 'src\MilfTV\Assets\milftv.ico'))
     # Aucun raccourci : -Shortcuts None (ou vide).
@@ -97,7 +114,11 @@ try {
     # Notes de la version, tirees de Assets\changelog.json (le fichier que l'application affiche) : anglais, puis les
     # autres langues repliables, avec les fichiers a telecharger. Jointes au paquet et a la page GitHub de la version.
     . (Join-Path $PSScriptRoot 'changelog.ps1')
-    $body = Get-ReleaseBody $Version "$PackId-$vpkChannel-Setup.exe" "$PackId-$vpkChannel-Portable.zip"
+    $packages = foreach ($a in $ReleaseArch) {
+        $ch = if ($a -eq 'x64') { $baseChannel } else { "$baseChannel-$a" }
+        @{ Arch = $a; Setup = "$PackId-$ch-Setup.exe"; Portable = "$PackId-$ch-Portable.zip" }
+    }
+    $body = Get-ReleaseBody $Version $packages
     if ($body) {
         $notes = Join-Path $root "artifacts\notes-$Version.md"
         [IO.File]::WriteAllText($notes, $body, (New-Object Text.UTF8Encoding($false)))
@@ -115,6 +136,8 @@ try {
             '--publish', '--releaseName', "MilfTV $Version", '--tag', "v$Version", '--targetCommitish', $Branch)
         # Les betas sont des pre-versions GitHub : seules les copies reglees sur Beta les lisent.
         if ($Channel -eq 'beta') { $up += '--pre' }
+        # ARM64 : ses fichiers rejoignent la version deja publiee pour x64 (meme etiquette, meme page).
+        if ($Merge -or $Arch -ne 'x64') { $up += '--merge' }
         dotnet @up
         if ($LASTEXITCODE) { throw "vpk upload a echoue." }
     }

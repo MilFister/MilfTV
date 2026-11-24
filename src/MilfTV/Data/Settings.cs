@@ -59,6 +59,9 @@ public sealed class ProfilePrefs
     // Lecture automatique
     public bool AutoPlayNext { get; set; } = true;
     public int AutoPlayCountdown { get; set; } = 8;
+    /// <summary>Début du compte à rebours : « end » = une fois l'épisode terminé ; « before » = avant la fin, pour qu'il
+    /// se termine pile à la fin de l'épisode (pendant le générique).</summary>
+    public string AutoPlayCountdownStart { get; set; } = "end";
     /// <summary>Nombre d'épisodes enchaînés avant de demander « Toujours là ? » (0 = illimité).</summary>
     public int AutoPlayMaxEpisodes { get; set; }
 
@@ -125,6 +128,8 @@ public sealed class AppSettings
     public bool SmoothRendering { get; set; } = true;
     /// <summary>Recherche et téléchargement automatiques des nouvelles versions (copie installée seulement).</summary>
     public bool AutoUpdate { get; set; } = true;
+    /// <summary>Le raccourci du bureau a déjà été proposé (copie installée).</summary>
+    public bool DesktopShortcutAsked { get; set; }
     /// <summary>Dernière version lancée : sert à annoncer les nouveautés après une mise à jour.</summary>
     public string? LastRunVersion { get; set; }
     /// <summary>Canal des mises à jour : « stable » (versions publiées) ou « beta » (nouveautés en avance).</summary>

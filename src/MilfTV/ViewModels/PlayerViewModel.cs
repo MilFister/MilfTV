@@ -278,6 +278,9 @@ public sealed partial class PlayerViewModel : ViewModelBase
         if (!IsLive) IsSidePanelOpen = IsSidePanelOpen && item is Series;
         NextEpisode = null;
         NextEpisodeCountdown = 0;
+        _preEndCountdown = false;
+        _preEndDismissedFor = null;
+        _countAsEnded = false;
         _timeshifted = false;
         try
         {
@@ -366,6 +369,12 @@ public sealed partial class PlayerViewModel : ViewModelBase
             return;
         }
         SaveProgress(final: true, ended: true, endPos, endDuration);
+        if (_preEndCountdown && NextEpisode is not null)
+        {
+            _autoChain++;
+            StartNextEpisode();
+            return;
+        }
         if (CurrentEpisode is { } ep)
         {
             var idx = ZapEpisodes.IndexOf(ep);
@@ -375,7 +384,8 @@ public sealed partial class PlayerViewModel : ViewModelBase
                 NextEpisode = ZapEpisodes[idx + 1];
                 // « Toujours là ? » après N épisodes enchaînés automatiquement.
                 StillWatchingPrompt = prefs.AutoPlayNext && prefs.AutoPlayMaxEpisodes > 0 && _autoChain >= prefs.AutoPlayMaxEpisodes;
-                NextEpisodeCountdown = prefs.AutoPlayNext && !StillWatchingPrompt ? Math.Clamp(prefs.AutoPlayCountdown, 1, 60) : 0;
+                NextEpisodeCountdown = prefs.AutoPlayNext && !StillWatchingPrompt && _preEndDismissedFor != ep.Key
+                    ? Math.Clamp(prefs.AutoPlayCountdown, 1, 60) : 0;
                 OnPropertyChanged(nameof(NextEpisodeText));
                 return;
             }
@@ -411,7 +421,8 @@ public sealed partial class PlayerViewModel : ViewModelBase
         _tickCount++;
 
         // compte à rebours de l'épisode suivant
-        if (NextEpisodeCountdown > 0 && _tickCount % 5 == 0)
+        TickPreEndCountdown();
+        if (!_preEndCountdown && NextEpisodeCountdown > 0 && _tickCount % 5 == 0)
         {
             NextEpisodeCountdown--;
             if (NextEpisodeCountdown == 0 && NextEpisode is not null)
@@ -444,6 +455,7 @@ public sealed partial class PlayerViewModel : ViewModelBase
             var fps = Engine.Fps > 1 ? Loc.T("Player.Fps", Math.Round(Engine.Fps)) : "";
             var codec = string.IsNullOrEmpty(Engine.VideoCodec) ? "" : " · " + ShortCodec(Engine.VideoCodec);
             VideoInfo = q + fps + codec;
+            CaptureMediaInfo();
         }
 
         var pos = Engine.TimePos;
@@ -500,22 +512,50 @@ public sealed partial class PlayerViewModel : ViewModelBase
 
     /// <summary>Classe de définition d'après la largeur OU la hauteur : les films au format cinéma sont moins hauts
     /// que leur classe (3840×1600 = 4K, 1920×800 = 1080p), et les sources HDV moins larges (1440×1080 = 1080p).</summary>
-    internal static string QualityLabel(long w, long h) =>
-        w >= 3200 || h >= 2000 ? "4K"
-        : w >= 2400 || h >= 1350 ? "1440p"
-        : w >= 1700 || h >= 1000 ? "1080p"
-        : w >= 1200 || h >= 700 ? "720p"
-        : $"{h}p";
+    internal static string QualityLabel(long w, long h) => MediaInfo.QualityLabel(w, h);
 
-    private static string ShortCodec(string codec)
+    private static string ShortCodec(string codec) => MediaInfo.CodecName(codec) ?? codec;
+
+    // ───────────── Informations média relevées à la lecture ─────────────
+
+    private string? _mediaCapturedFor;
+
+    /// <summary>Film ou épisode en lecture : relève une fois ses caractéristiques réelles (toutes les pistes audio et de
+    /// sous-titres, définition, HDR…) pour la fiche, qui les montrera ensuite sans relire le flux.</summary>
+    private void CaptureMediaInfo()
     {
-        var c = codec.ToLowerInvariant();
-        if (c.Contains("hevc") || c.Contains("h.265") || c.Contains("h265")) return "HEVC";
-        if (c.Contains("h264") || c.Contains("h.264") || c.Contains("avc")) return "H.264";
-        if (c.Contains("av1")) return "AV1";
-        if (c.Contains("mpeg2") || c.Contains("mpeg-2")) return "MPEG-2";
-        if (c.Contains("vp9")) return "VP9";
-        return codec.Split(' ', '(')[0].ToUpperInvariant();
+        var key = CurrentMovie?.Key ?? CurrentEpisode?.Key;
+        if (key is null || key == _mediaCapturedFor || Engine.VideoHeight <= 0 || Engine.TimePos < 3) return;
+        _mediaCapturedFor = key;
+        try
+        {
+            var tracks = Engine.Tracks;
+            var audio = tracks.Where(t => t.Type == "audio").ToList();
+            var main = audio.FirstOrDefault(t => t.Selected) ?? audio.FirstOrDefault();
+            static List<string> Langs(IEnumerable<TrackInfo> list) =>
+                list.Select(t => t.Lang).Where(l => !string.IsNullOrWhiteSpace(l) && l != "und").Select(l => l!).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var info = new MediaInfo
+            {
+                Width = (int)Engine.VideoWidth,
+                Height = (int)Engine.VideoHeight,
+                VideoCodec = Engine.VideoCodec,
+                Hdr = Engine.GetString("video-params/gamma") is "pq" or "hlg",
+                Fps = Engine.Fps > 1 ? Math.Round(Engine.Fps, 3) : null,
+                AudioCodec = main?.Codec,
+                AudioChannels = main?.Channels,
+                AudioLanguages = Langs(audio),
+                SubtitleLanguages = Langs(tracks.Where(t => t.Type == "sub" && !t.External)),
+                DurationSecs = Engine.Duration > 0 ? (int)Engine.Duration : null,
+                Container = MediaInfo.ContainerName(Engine.GetString("file-format")),
+                FromPlayback = true,
+                Updated = DateTimeOffset.Now,
+            };
+            MediaInfoCache.Put(key, info);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("Informations média non relevées : " + ex.Message);
+        }
     }
 
     // ───────────── Guide TV de la chaîne en cours ─────────────
@@ -561,6 +601,7 @@ public sealed partial class PlayerViewModel : ViewModelBase
         if (IsLive || !IsOpen || _openPending) return;
         var pos = endPos ?? Engine.TimePos;
         var dur = endDuration is > 0 ? endDuration.Value : Engine.Duration;
+        ended |= _countAsEnded;
         if (ended && dur > 0) pos = Math.Max(pos, dur);
         if (dur <= 0 || (pos < 5 && !ended)) return;
         var watched = ended || pos / dur * 100 >= Math.Clamp(Lib.Prefs.WatchedThresholdPercent, 50, 100);
@@ -1181,6 +1222,9 @@ public sealed partial class PlayerViewModel : ViewModelBase
 
     private void StartNextEpisode()
     {
+        // Lancé avant la fin (générique) : l'épisode en cours compte comme terminé.
+        if (_preEndCountdown) _countAsEnded = true;
+        _preEndCountdown = false;
         var next = NextEpisode;
         NextEpisode = null;
         NextEpisodeCountdown = 0;
@@ -1200,9 +1244,66 @@ public sealed partial class PlayerViewModel : ViewModelBase
     [RelayCommand]
     private void CancelNextEpisode()
     {
+        // Décompte avant la fin : on continue de regarder l'épisode (générique), sans relancer de décompte.
+        if (_preEndCountdown)
+        {
+            _preEndDismissedFor = CurrentEpisode?.Key;
+            DisarmPreEnd();
+            return;
+        }
         NextEpisode = null;
         NextEpisodeCountdown = 0;
         Close();
+    }
+
+    // ───────────── Décompte avant la fin de l'épisode (réglage « Début du compte à rebours ») ─────────────
+
+    private bool _preEndCountdown;
+    private string? _preEndDismissedFor;
+    private bool _countAsEnded;
+
+    /// <summary>Le compte à rebours démarre autant de secondes avant la fin que sa durée et suit la position réelle :
+    /// il se fige en pause, disparaît si l'on revient en arrière, et l'épisode suivant démarre à la fin.</summary>
+    private void TickPreEndCountdown()
+    {
+        var prefs = Lib.Prefs;
+        if (CurrentEpisode is not { } ep || CurrentSeries is null || IsLive || !prefs.AutoPlayNext || prefs.AutoPlayCountdownStart != "before")
+        {
+            if (_preEndCountdown) DisarmPreEnd();
+            return;
+        }
+        var dur = Engine.Duration;
+        if (dur <= 0 || IsLoading || ErrorMessage is not null || _openPending) return;
+        var remaining = dur - Engine.TimePos;
+        var length = Math.Clamp(prefs.AutoPlayCountdown, 3, 60);
+        if (!_preEndCountdown)
+        {
+            if (remaining > length || remaining <= 0.5 || _preEndDismissedFor == ep.Key || NextEpisode is not null) return;
+            var idx = ZapEpisodes.IndexOf(ep);
+            if (idx < 0 || idx + 1 >= ZapEpisodes.Count) return;
+            // « Toujours là ? » : la question reste posée à la fin de l'épisode, comme avant.
+            if (prefs.AutoPlayMaxEpisodes > 0 && _autoChain >= prefs.AutoPlayMaxEpisodes) return;
+            _preEndCountdown = true;
+            NextEpisode = ZapEpisodes[idx + 1];
+        }
+        else if (remaining > length + 2)
+        {
+            DisarmPreEnd(); // retour en arrière
+            return;
+        }
+        NextEpisodeCountdown = Math.Max(1, (int)Math.Ceiling(remaining));
+        if (remaining <= 0.35)
+        {
+            _autoChain++;
+            StartNextEpisode();
+        }
+    }
+
+    private void DisarmPreEnd()
+    {
+        _preEndCountdown = false;
+        NextEpisode = null;
+        NextEpisodeCountdown = 0;
     }
 
     [RelayCommand]

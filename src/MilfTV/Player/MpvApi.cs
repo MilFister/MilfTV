@@ -113,7 +113,7 @@ internal static class MpvApi
     private static void PreferSystemVulkan()
     {
         // Test uniquement : simule un PC sans Vulkan pour vérifier la copie livrée.
-        if (Environment.GetEnvironmentVariable("MILFTV_DATA") is { Length: > 0 }
+        if (ViewModels.DevScript.ToolsCompiled && Environment.GetEnvironmentVariable("MILFTV_DATA") is { Length: > 0 }
             && Environment.GetEnvironmentVariable("MILFTV_BUNDLED_VULKAN") == "1") return;
         NativeLibrary.TryLoad(Path.Combine(Environment.SystemDirectory, "vulkan-1.dll"), out _);
     }

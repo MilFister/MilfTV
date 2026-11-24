@@ -176,8 +176,8 @@ public sealed partial class VodBrowserViewModel : ViewModelBase
         ApplyFilter();
     }
 
-    /// <summary>Déjà vu : film terminé, ou série dont au moins un épisode a été regardé ou commencé.</summary>
-    private static bool Seen(CatalogItem x) => x is Movie m ? m.IsWatched : x.IsInProgress;
+    /// <summary>Déjà vu : film terminé, ou série vue en entier ou dont au moins un épisode a été regardé ou commencé.</summary>
+    private static bool Seen(CatalogItem x) => x.IsWatched || (x is Series && x.IsInProgress);
     partial void OnFilterChanged(string value) => ApplyFilter();
 
     private void ApplyFilter()
@@ -242,10 +242,11 @@ public sealed partial class VodBrowserViewModel : ViewModelBase
     [RelayCommand] private void Open(CatalogItem item) => _main.OpenDetails(item);
     [RelayCommand] private void ToggleFavorite(CatalogItem item) => Lib.ToggleFavorite(item);
 
-    /// <summary>Menu de l'affiche : marquer un film comme vu.</summary>
+    /// <summary>Menu de l'affiche : marquer un film comme vu, ou tous les épisodes d'une série.</summary>
     [RelayCommand]
-    private void MarkWatched(CatalogItem item)
+    private async Task MarkWatchedAsync(CatalogItem item)
     {
+        if (item is Series s) { await _main.MarkSeriesWatchedAsync(s); return; }
         if (item is not Movie m) return;
         var w = Lib.GetWatch(m.Key);
         Lib.SaveWatch(new WatchEntry
@@ -291,6 +292,9 @@ public sealed partial class VodBrowserViewModel : ViewModelBase
 }
 
 /// <summary>Base commune des fiches film / série.</summary>
+/// <summary>Une case de la section « Informations sur le média » d'une fiche.</summary>
+public sealed record MediaRow(string Label, string Value);
+
 public abstract partial class DetailViewModelBase : ViewModelBase
 {
     protected readonly MainViewModel MainVm;
@@ -320,6 +324,45 @@ public abstract partial class DetailViewModelBase : ViewModelBase
     public bool HasTrailer => !string.IsNullOrEmpty(TrailerKey);
 
     partial void OnTrailerKeyChanged(string? value) => OnPropertyChanged(nameof(HasTrailer));
+
+    // ───────────── Informations sur le média ─────────────
+
+    [ObservableProperty] private IReadOnlyList<string> _mediaChips = Array.Empty<string>();
+    [ObservableProperty] private IReadOnlyList<MediaRow> _mediaRows = Array.Empty<MediaRow>();
+    [ObservableProperty] private string? _mediaNote;
+    [ObservableProperty] private string _mediaTitle = Loc.T("Media.Title");
+    public bool HasMediaChips => MediaChips.Count > 0;
+    public bool HasMediaRows => MediaRows.Count > 0;
+    partial void OnMediaChipsChanged(IReadOnlyList<string> value) => OnPropertyChanged(nameof(HasMediaChips));
+    partial void OnMediaRowsChanged(IReadOnlyList<MediaRow> value) => OnPropertyChanged(nameof(HasMediaRows));
+
+    /// <summary>Langue originale (TMDB).</summary>
+    protected string? OriginalLanguage { get; private set; }
+
+    /// <summary>Recalcule les informations sur le média (fournisseur, relevé de lecture, TMDB).</summary>
+    protected virtual void RefreshMedia() { }
+
+    protected void ShowMedia(MediaInfo? m, string? title = null, bool withDuration = true)
+    {
+        MediaTitle = title ?? Loc.T("Media.Title");
+        MediaChips = m?.Chips ?? Array.Empty<string>();
+        var rows = new List<MediaRow>();
+        void Add(string key, string? value)
+        {
+            if (!string.IsNullOrWhiteSpace(value)) rows.Add(new MediaRow(Loc.T(key), value!));
+        }
+        Add("Media.Resolution", m?.ResolutionText);
+        Add("Media.Video", m?.VideoText);
+        Add("Media.Audio", m?.AudioText);
+        Add("Media.AudioLanguages", m?.AudioLanguagesText);
+        Add("Media.Subtitles", m?.SubtitlesText);
+        if (withDuration && m?.DurationSecs is > 0) Add("Media.Duration", TextNorm.Duration(m.DurationSecs.Value));
+        Add("Media.Bitrate", m?.BitrateText);
+        Add("Media.Container", m?.Container);
+        Add("Media.OriginalLanguage", Player.TrackInfo.LanguageName(OriginalLanguage));
+        MediaRows = rows;
+        MediaNote = m is null ? null : Loc.T(m.FromPlayback ? "Media.FromPlayback" : "Media.FromProvider");
+    }
 
     protected void ApplyDetails(MediaDetails? provider, MediaDetails? tmdb, string fallbackTitle, int? fallbackYear, double? fallbackRating)
     {
@@ -352,6 +395,8 @@ public abstract partial class DetailViewModelBase : ViewModelBase
         Cast.Clear();
         foreach (var m in cast.Take(15)) Cast.Add(m);
         OnPropertyChanged(nameof(HasCast));
+        OriginalLanguage = d?.OriginalLanguage ?? OriginalLanguage;
+        RefreshMedia();
     }
 
     private static string? FirstNonEmpty(params string?[] values) => values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
@@ -417,7 +462,12 @@ public sealed partial class MovieDetailViewModel : DetailViewModelBase
     {
         MainVm.WatchChanged += RefreshResume;
         RefreshResume();
+        RefreshMedia(); // retour du lecteur : le relevé de la lecture complète la fiche
     }
+
+    private MediaInfo? _providerMedia;
+
+    protected override void RefreshMedia() => ShowMedia(MediaInfo.Merge(MediaInfoCache.Get(Movie.Key), _providerMedia));
 
     public override void OnNavigatedFrom()
     {
@@ -430,6 +480,7 @@ public sealed partial class MovieDetailViewModel : DetailViewModelBase
         {
             var providerTask = Lib.Provider?.GetMovieDetailsAsync(Movie, Cts.Token) ?? Task.FromResult<MediaDetails?>(null);
             var provider = await providerTask;
+            _providerMedia = provider?.Media;
             ApplyDetails(provider, null, Movie.Name, Movie.Year, Movie.Rating);
             if (Lib.Tmdb.IsConfigured)
             {
@@ -497,6 +548,9 @@ public sealed partial class SeriesDetailViewModel : DetailViewModelBase
     [ObservableProperty] private IReadOnlyList<Episode> _episodes = Array.Empty<Episode>();
     [ObservableProperty] private string _playLabel = Loc.T("Vod.Play");
     [ObservableProperty] private string? _error;
+    /// <summary>Tous les épisodes de la saison affichée (ou de la série) sont vus : le bouton propose l'inverse.</summary>
+    [ObservableProperty] private bool _seasonWatched;
+    [ObservableProperty] private bool _seriesWatched;
     private Episode? _resumeEpisode;
     private string? _tmdbId;
 
@@ -507,6 +561,18 @@ public sealed partial class SeriesDetailViewModel : DetailViewModelBase
     {
         MainVm.WatchChanged += RefreshProgress;
         RefreshProgress();
+        RefreshMedia();
+    }
+
+    /// <summary>Chaque épisode : relevé de lecture complété par le fournisseur ; l'en-tête résume la saison affichée.</summary>
+    protected override void RefreshMedia()
+    {
+        foreach (var s in Seasons)
+            foreach (var e in s.Episodes)
+                e.Media = MediaInfo.Merge(MediaInfoCache.Get(e.Key), e.ProviderMedia);
+        var season = SelectedSeason;
+        ShowMedia(MediaInfo.Summarize((season?.Episodes ?? new List<Episode>()).Select(e => e.Media)),
+            season is null ? null : Loc.T("Media.SeasonTitle", season.Name), withDuration: false);
     }
 
     public override void OnNavigatedFrom()
@@ -534,6 +600,7 @@ public sealed partial class SeriesDetailViewModel : DetailViewModelBase
                 OnPropertyChanged(nameof(SeasonSummary));
                 RefreshProgress();
                 SelectedSeason = _resumeEpisode is { } re ? Seasons.FirstOrDefault(s => s.Episodes.Contains(re)) ?? Seasons.FirstOrDefault() : Seasons.FirstOrDefault();
+                RefreshMedia();
             }
             if (Seasons.Count == 0) Error = Loc.T("Vod.NoEpisodes");
             var tmdb = await tmdbTask;
@@ -559,6 +626,8 @@ public sealed partial class SeriesDetailViewModel : DetailViewModelBase
     partial void OnSelectedSeasonChanged(SeasonInfo? value)
     {
         Episodes = value?.Episodes ?? (IReadOnlyList<Episode>)Array.Empty<Episode>();
+        UpdateWatchedFlags();
+        RefreshMedia();
         if (value is not null && _tmdbId is not null) _ = EnrichSeasonAsync(value);
     }
 
@@ -611,14 +680,43 @@ public sealed partial class SeriesDetailViewModel : DetailViewModelBase
             var ep = all.FirstOrDefault(e => e.Id == last.ItemId);
             if (ep is not null && last.Watched)
             {
+                // Suite : premier épisode non vu après le dernier regardé (une saison marquée vue est sautée).
                 var idx = all.IndexOf(ep);
-                ep = idx + 1 < all.Count ? all[idx + 1] : null;
+                ep = all.Skip(idx + 1).FirstOrDefault(e => !e.IsWatched);
             }
             _resumeEpisode = ep;
         }
         PlayLabel = _resumeEpisode is { } re
             ? (re.Progress > 0 && !re.IsWatched ? Loc.T("Vod.ResumeEpisode", re.Code) : Loc.T("Vod.PlayEpisode", re.Code))
             : Seasons.FirstOrDefault()?.Episodes.FirstOrDefault() is { } first ? Loc.T("Vod.PlayEpisode", first.Code) : Loc.T("Vod.Play");
+        UpdateWatchedFlags();
+        if (Seasons.Count > 0) Lib.SetSeriesCompleted(Series, SeriesWatched);
+    }
+
+    private void UpdateWatchedFlags()
+    {
+        SeasonWatched = SelectedSeason is { Episodes.Count: > 0 } ss && ss.Episodes.All(e => e.IsWatched);
+        var all = Seasons.SelectMany(x => x.Episodes).ToList();
+        SeriesWatched = all.Count > 0 && all.All(e => e.IsWatched);
+    }
+
+    /// <summary>Saison affichée marquée vue (ou non vue si elle l'est déjà entièrement).</summary>
+    [RelayCommand]
+    private void ToggleSeasonWatched()
+    {
+        if (SelectedSeason is not { } season) return;
+        MarkEpisodes(season.Episodes, !SeasonWatched);
+    }
+
+    /// <summary>Toute la série marquée vue (ou non vue si elle l'est déjà entièrement).</summary>
+    [RelayCommand]
+    private void ToggleSeriesWatched() => MarkEpisodes(Seasons.SelectMany(x => x.Episodes).ToList(), !SeriesWatched);
+
+    private void MarkEpisodes(IReadOnlyList<Episode> episodes, bool watched)
+    {
+        var count = Lib.SetEpisodesWatched(Series, episodes, watched);
+        RefreshProgress();
+        MainVm.ReportEpisodesMarked(Series, count, watched);
     }
 
     [RelayCommand]

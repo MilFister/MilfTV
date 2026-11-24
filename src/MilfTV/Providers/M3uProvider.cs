@@ -57,7 +57,11 @@ public sealed partial class M3uProvider : IProvider
             if (File.Exists(src))
                 return await File.ReadAllTextAsync(src, ct).ConfigureAwait(false);
             if (!src.Contains("://")) throw new ProviderException(Loc.T("M3u.FileNotFound", src));
-            return await Http.GetStringAsync(Http.Iptv, src, Source.UserAgent, timeout, ct).ConfigureAwait(false);
+            return await Http.GetStringAsync(Http.ForSource(Source), src, Source.UserAgent, timeout, ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException ex) when (Http.IsCertificateError(ex))
+        {
+            throw new ProviderException(Loc.T("Source.CertInvalid"), ex);
         }
         catch (HttpRequestException ex)
         {

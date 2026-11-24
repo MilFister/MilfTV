@@ -122,13 +122,17 @@ internal sealed class XmltvParser
                     throw new XmltvFormatException(Loc.T("Epg.XzUnsupported"));
                 }
             }
-            return peek;
+            // Taille décompressée plafonnée : un fichier « bombe » (quelques Ko compressés, des Go une fois
+            // décompressés) ne doit pas remplir la mémoire ni la base. Les plus gros guides réels font environ 1 Go.
+            return new Core.LimitedStream(peek, MaxGuideBytes);
         }
         current.Dispose();
         throw new XmltvFormatException(Loc.T("Epg.MultiCompressed"));
     }
 
     // ------------------------------------------------------------------ lecture
+
+    private const long MaxGuideBytes = 3L * 1024 * 1024 * 1024;
 
     public async Task ParseAsync(Stream stream)
     {

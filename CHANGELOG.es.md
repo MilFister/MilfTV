@@ -4,6 +4,41 @@
 
 Todos los cambios destacados de MilfTV, del más reciente al más antiguo.
 
+## 1.0.0-beta.2
+
+*Publicada el 2026-11-24*
+
+Actualización de seguridad tras una auditoría completa de la aplicación, con novedades: información del medio en las fichas y vistas previas, ficha de programas al pasar sobre los canales, temporada o serie entera marcada como vista de una vez, acceso directo en el escritorio opcional y una versión nativa para PC con Windows en ARM. Se recomienda a todos.
+
+### Novedades
+
+- En la lista de canales del reproductor, deja el ratón un momento sobre un canal para ver su ficha: el programa en curso (horario, progreso, tiempo restante, género, episodio, sinopsis e imagen cuando la guía los ofrece) y los siguientes programas. Sigue el ajuste «Vista previa al pasar el ratón» y su retardo, como las carátulas.
+- Series: marca de una vez toda una temporada o toda la serie como vista (o no vista) con los botones de la ficha de la serie. El menú contextual del cartel de una serie también ofrece «Marcar toda la serie como vista». El botón de reproducción empieza entonces por el primer episodio no visto.
+- Instalación: el acceso directo en el escritorio ya no es obligatorio. En el primer inicio, MilfTV te pregunta si quieres uno, y puedes añadirlo o quitarlo en cualquier momento en Ajustes › Datos y acerca de. Se elimina al desinstalar MilfTV. El acceso directo del menú Inicio se sigue creando.
+- Inicio: las filas horizontales se desplazan más fácilmente. Su barra de desplazamiento se ha rediseñado con los colores de la aplicación (un control del color de acento que se ensancha al pasar el ratón) y siempre está visible, aparecen flechas al pasar el ratón para avanzar una pantalla, y puedes arrastrar una fila hacia un lado con el ratón (botón izquierdo pulsado, incluso sobre un cartel). Lo mismo vale para Reparto y En la misma categoría en las fichas.
+- Minirreproductor: ajusta el volumen directamente, con un control deslizante junto al botón de sonido (y el porcentaje cuando hay sitio), o con la rueda del ratón sobre el minirreproductor.
+- Fichas de películas y series: información del medio. Etiquetas bajo el título (4K, HDR, HEVC, 5.1, idiomas) y una sección Información del medio: resolución, vídeo, audio, idiomas de audio, subtítulos, duración, tasa de bits, formato e idioma original. Tu proveedor la indica y la primera reproducción la completa (todos los idiomas de audio y los subtítulos). En las series, cada episodio tiene su línea técnica y la ficha resume la temporada.
+- Todas las barras de desplazamiento de la aplicación adoptan el nuevo estilo: una pista discreta y un control del color de acento que se ensancha al pasar el ratón.
+- Vista previa al pasar sobre los carteles: ahora muestra también la información del medio (resolución, HDR, códec, sonido, idiomas) y, en las series, la duración de un episodio.
+- Reproducción automática: elige cuándo empieza la cuenta atrás del siguiente episodio (Ajustes › Reproducción automática): al final del episodio, como antes, o antes del final, durante los créditos, para que el siguiente episodio empiece en cuanto acaba este. La cuenta atrás puede durar ahora hasta 60 segundos.
+- Windows en ARM: una versión ARM64 nativa para PC con procesadores Snapdragon y otros chips ARM, con su propio instalador y sus propias actualizaciones automáticas.
+
+### Seguridad
+
+- Ahora se comprueban las direcciones de flujo de las listas y los portales: se rechazan las carpetas de red y los protocolos internos del motor de vídeo. Una lista maliciosa ya no puede hacer que Windows envíe la huella de la contraseña de tu cuenta a un servidor desconocido.
+- Ahora se verifican los certificados HTTPS de los servidores IPTV. Si tu proveedor usa un certificado no válido, marca «Aceptar un certificado no válido» en las opciones avanzadas de la fuente (no recomendado).
+- Los usuarios, contraseñas y tokens se ocultan en el registro, así que puede adjuntarse a un informe de error.
+- El código parental se guarda como huella con sal, y los errores repetidos de código o de contraseña de perfil imponen ahora una espera creciente (de 5 segundos a 5 minutos).
+- Las listas, catálogos o guías de TV desmesurados se rechazan en lugar de saturar la memoria.
+- El reproductor de tráileres rechaza las descargas y las solicitudes de cámara, micrófono, ubicación o notificaciones.
+- Las herramientas de prueba ya no se incluyen en las versiones publicadas.
+- Antes de restaurar, se muestran los servidores de las fuentes de la copia y, si lo hay, su carpeta de red de grabaciones.
+
+### Correcciones
+
+- El título «¿Quién está viendo?» sigue el cambio de idioma.
+- En Mi lista, «Marcar como visto» no hacía nada en una serie: ahora marca todos sus episodios.
+
 ## 1.0.0-beta.1
 
 *Publicada el 2026-11-23*

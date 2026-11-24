@@ -21,6 +21,10 @@ public sealed partial class ConfirmDialogViewModel : ViewModelBase
     public string DialogTitle { get; }
     public string Message { get; }
     public string ConfirmText { get; }
+    /// <summary>Texte du bouton de refus (« Annuler » par défaut).</summary>
+    public string CancelText { get; init; } = Localization.Loc.T("Ui.Annuler");
+    /// <summary>Action destructrice (bouton rouge) ; sinon bouton d'accent.</summary>
+    public bool IsDanger { get; init; } = true;
     public Task<bool> Task => _tcs.Task;
     public event Action<bool>? Completed;
 
@@ -82,10 +86,24 @@ public sealed partial class PinDialogViewModel : ViewModelBase
     {
         if (Mode == PinDialogMode.Verify)
         {
-            if (Library.Instance.CheckPin(Pin)) _done(true);
+            // Trop d'erreurs : on attend avant d'accepter un nouvel essai (pas d'essai de tous les codes à la chaîne).
+            if (AttemptGuard.Remaining("pin") is { TotalSeconds: > 0 } wait)
+            {
+                Error = Loc.T("Pin.TooManyAttempts", (int)Math.Ceiling(wait.TotalSeconds));
+                Pin = "";
+                Shake++;
+                return;
+            }
+            if (Library.Instance.CheckPin(Pin))
+            {
+                AttemptGuard.Succeeded("pin");
+                _done(true);
+            }
             else
             {
-                Error = Loc.T("Pin.Wrong");
+                AttemptGuard.Failed("pin");
+                var next = AttemptGuard.Remaining("pin");
+                Error = next.TotalSeconds > 0 ? Loc.T("Pin.TooManyAttempts", (int)Math.Ceiling(next.TotalSeconds)) : Loc.T("Pin.Wrong");
                 Pin = "";
                 Shake++;
             }
@@ -139,6 +157,7 @@ public sealed partial class SourceEditorViewModel : ViewModelBase
             Mac = existing.MacAddress ?? "00:1A:79:";
             EpgUrl = existing.EpgUrl ?? "";
             UserAgent = existing.UserAgent ?? "";
+            AllowInvalidCertificate = existing.AllowInvalidCertificate;
             IsShared = existing.IsShared;
         }
         SelectedKind = kind;
@@ -155,6 +174,8 @@ public sealed partial class SourceEditorViewModel : ViewModelBase
     [ObservableProperty] private string _mac = "00:1A:79:";
     [ObservableProperty] private string _epgUrl = "";
     [ObservableProperty] private string _userAgent = "";
+    /// <summary>Accepter un certificat HTTPS non valide pour ce serveur (déconseillé).</summary>
+    [ObservableProperty] private bool _allowInvalidCertificate;
     [ObservableProperty] private bool _showAdvanced;
     /// <summary>Visible par les autres profils (qui ne pourront pas la modifier).</summary>
     [ObservableProperty] private bool _isShared;
@@ -221,6 +242,7 @@ public sealed partial class SourceEditorViewModel : ViewModelBase
         src.MacAddress = IsStalker ? Mac.Trim().ToUpperInvariant() : null;
         src.EpgUrl = string.IsNullOrWhiteSpace(EpgUrl) ? null : EpgUrl.Trim();
         src.UserAgent = string.IsNullOrWhiteSpace(UserAgent) ? null : UserAgent.Trim();
+        src.AllowInvalidCertificate = AllowInvalidCertificate;
         src.Name = string.IsNullOrWhiteSpace(Name) ? DefaultName(src) : Name.Trim();
         src.IsShared = IsShared;
         return src;

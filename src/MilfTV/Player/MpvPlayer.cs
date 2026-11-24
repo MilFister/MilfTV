@@ -303,6 +303,13 @@ public sealed class MpvPlayer : IDisposable
 
     public void Open(string url, MediaOpenOptions o)
     {
+        // Adresse venue d'une source (non fiable) : seuls les flux réseau et les fichiers locaux sont ouverts.
+        // (Les tests automatisés ouvrent des mires « av://lavfi » : permis seulement avec les outils de test.)
+        if (!StreamUrlPolicy.IsAllowed(url) && !(ViewModels.DevScript.IsEnabled && url.StartsWith("av://", StringComparison.Ordinal)))
+        {
+            Log.Warn("Adresse de flux refusée (partage réseau ou protocole non pris en charge)");
+            throw new InvalidOperationException(Loc.T("Player.UnsafeUrl"));
+        }
         LastError = null;
         CacheStart = CacheEnd = double.NaN;
         TimePos = 0;

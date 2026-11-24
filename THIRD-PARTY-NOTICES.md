@@ -12,6 +12,8 @@ MilfTV ships with the components below. Their licence texts are in the `licenses
 | Skia and HarfBuzz (through SkiaSharp and HarfBuzzSharp) | 2.88.9 / 8.3.1.1 | MIT, with the notices in `licenses/SkiaSharp-HarfBuzzSharp-THIRD-PARTY-NOTICES.txt` | <https://github.com/mono/SkiaSharp> |
 | SQLite (through SQLitePCLRaw.lib.e_sqlite3) | 3.x | Public domain | <https://sqlite.org> |
 
+The ARM64 version ships the ARM64 build of the same Khronos loader published by the Silk.NET project (.NET Foundation, package `Silk.NET.Vulkan.Loader.Native` 2025.9.12, Apache-2.0), and the ARM64 (aarch64) build of libmpv from the same source and date as the x64 one.
+
 The Vulkan loader is used only when Windows does not already provide one (it normally comes with the graphics driver). libmpv needs it to start, even though MilfTV draws the video through OpenGL.
 
 MilfTV itself is licensed under the GNU General Public License v3.0 (see `LICENSE`), which is compatible with libmpv (GPL-2.0-or-later, texts in `licenses/GPL-2.0.txt` and `licenses/GPL-3.0.txt`) and with the Apache-2.0 Vulkan loader. The source code of libmpv and of the libraries it contains is available from the projects listed above, for the build referenced by its version.

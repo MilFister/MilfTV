@@ -30,6 +30,8 @@ public sealed partial class PosterPreviewViewModel : ObservableObject
                 Plot = m.Plot;
                 ImageUrl = m.ImageUrl;
                 MetaLine = BuildMeta(m.Year, null, null, m.Rating, SplitGenres(m.Genre));
+                // Déjà lu : les pastilles s'affichent tout de suite, sans attendre le fournisseur.
+                MediaChips = MediaInfoCache.Get(m.Key)?.Chips ?? Array.Empty<string>();
                 break;
             case Series s:
                 Plot = s.Plot;
@@ -60,6 +62,11 @@ public sealed partial class PosterPreviewViewModel : ObservableObject
     public bool HasPlot => !string.IsNullOrWhiteSpace(Plot);
     partial void OnPlotChanged(string? value) => OnPropertyChanged(nameof(HasPlot));
 
+    /// <summary>Pastilles techniques (4K, HDR, HEVC, 5.1, langues) : fournisseur et relevé de la dernière lecture.</summary>
+    [ObservableProperty] private IReadOnlyList<string> _mediaChips = Array.Empty<string>();
+    public bool HasMediaChips => MediaChips.Count > 0;
+    partial void OnMediaChipsChanged(IReadOnlyList<string> value) => OnPropertyChanged(nameof(HasMediaChips));
+
     /// <summary>L'aperçu doit se fermer (action lancée depuis l'aperçu).</summary>
     public event Action? CloseRequested;
 
@@ -78,7 +85,8 @@ public sealed partial class PosterPreviewViewModel : ObservableObject
             // Laisse l'aperçu s'afficher avant les requêtes réseau.
             await Task.Yield();
             MediaDetails? provider = null, tmdb = null;
-            int? seasons = null;
+            int? seasons = null, episodeSecs = null;
+            MediaInfo? media = null;
             string? itemTmdbId = null;
             switch (Item)
             {
@@ -92,6 +100,7 @@ public sealed partial class PosterPreviewViewModel : ObservableObject
                     // Le fournisseur connaît parfois l'identifiant TMDB alors que le catalogue ne l'a pas.
                     if (tmdb is null && provider?.TmdbId is { } pid && pid != m.TmdbId && lib.Tmdb.IsConfigured)
                         tmdb = await lib.Tmdb.GetMovieAsync(pid, m.Name, m.Year ?? provider.Year, ct);
+                    media = MediaInfo.Merge(MediaInfoCache.Get(m.Key), provider?.Media);
                     break;
                 }
                 case Series s:
@@ -102,14 +111,22 @@ public sealed partial class PosterPreviewViewModel : ObservableObject
                     var details = await detailsTask;
                     tmdb = await tmdbTask;
                     provider = details?.Info;
-                    if (details?.Seasons is { Count: > 0 } list) seasons = list.Count;
+                    if (details?.Seasons is { Count: > 0 } list)
+                    {
+                        seasons = list.Count;
+                        var episodes = list.SelectMany(x => x.Episodes).ToList();
+                        media = MediaInfo.Summarize(episodes.Select(e => MediaInfo.Merge(MediaInfoCache.Get(e.Key), e.ProviderMedia)));
+                        // Durée typique d'un épisode (médiane : un pilote ou un final plus long ne la fausse pas).
+                        var secs = episodes.Select(e => e.DurationSecs ?? e.ProviderMedia?.DurationSecs ?? 0).Where(x => x > 60).OrderBy(x => x).ToList();
+                        if (secs.Count > 0) episodeSecs = secs[secs.Count / 2];
+                    }
                     if (tmdb is null && provider?.TmdbId is { } pid && pid != s.TmdbId && lib.Tmdb.IsConfigured)
                         tmdb = await lib.Tmdb.GetSeriesAsync(pid, s.Name, s.Year ?? provider.Year, ct);
                     break;
                 }
             }
             ct.ThrowIfCancellationRequested();
-            Apply(provider, tmdb, seasons);
+            Apply(provider, tmdb, seasons, media, episodeSecs);
 
             var kind = Item is Series ? ContentKind.Series : ContentKind.Movie;
             var key = await TrailerResolver.ResolveAsync(kind, tmdb?.TmdbId ?? provider?.TmdbId ?? itemTmdbId,
@@ -130,8 +147,9 @@ public sealed partial class PosterPreviewViewModel : ObservableObject
         }
     }
 
-    private void Apply(MediaDetails? provider, MediaDetails? tmdb, int? seasons)
+    private void Apply(MediaDetails? provider, MediaDetails? tmdb, int? seasons, MediaInfo? media, int? episodeSecs)
     {
+        if (media is not null) MediaChips = media.Chips;
         if (!string.IsNullOrWhiteSpace(tmdb?.Title)) Title = tmdb!.Title;
         Plot = FirstNonEmpty(tmdb?.Plot, provider?.Plot, Plot);
         ImageUrl = FirstNonEmpty(tmdb?.BackdropUrl, provider?.BackdropUrl, ImageUrl, tmdb?.PosterUrl, provider?.PosterUrl);
@@ -142,17 +160,19 @@ public sealed partial class PosterPreviewViewModel : ObservableObject
             Series s => (s.Year, s.Rating, s.Genre),
             _ => ((int?)null, (double?)null, (string?)null),
         };
-        var runtime = Item is Movie ? tmdb?.RuntimeMinutes ?? provider?.RuntimeMinutes : null;
+        var runtime = Item is Movie ? tmdb?.RuntimeMinutes ?? provider?.RuntimeMinutes ?? (media?.DurationSecs is > 60 and var ms ? ms / 60 : null) : null;
         MetaLine = BuildMeta(tmdb?.Year ?? provider?.Year ?? year, runtime, seasons, tmdb?.Rating ?? provider?.Rating ?? rating,
-            genres ?? SplitGenres(itemGenres));
+            genres ?? SplitGenres(itemGenres), episodeSecs);
     }
 
-    private static string? BuildMeta(int? year, int? runtimeMinutes, int? seasons, double? rating, IReadOnlyList<string>? genres)
+    private static string? BuildMeta(int? year, int? runtimeMinutes, int? seasons, double? rating, IReadOnlyList<string>? genres,
+        int? episodeSecs = null)
     {
         var parts = new List<string>();
         if (year is > 0) parts.Add(year.Value.ToString(CultureInfo.InvariantCulture));
         if (runtimeMinutes is > 0) parts.Add(TextNorm.Duration(runtimeMinutes.Value * 60));
         if (seasons is > 0) parts.Add(Loc.T(seasons > 1 ? "Preview.Seasons.Many" : "Preview.Seasons.One", seasons.Value));
+        if (episodeSecs is > 0) parts.Add(Loc.T("Preview.PerEpisode", TextNorm.Duration(episodeSecs.Value)));
         if (rating is > 0) parts.Add("★ " + rating.Value.ToString("0.0", Loc.Culture));
         if (genres is { Count: > 0 }) parts.Add(string.Join(", ", genres.Take(3)));
         return parts.Count == 0 ? null : string.Join("  ·  ", parts);

@@ -4,6 +4,41 @@
 
 Alle wichtigen Änderungen an MilfTV, die neueste zuerst.
 
+## 1.0.0-beta.2
+
+*Veröffentlicht am 2026-11-24*
+
+Sicherheitsupdate nach einer vollständigen Prüfung der Anwendung, mit Neuerungen: Medieninformationen auf Detailseiten und in Vorschauen, Programmübersicht beim Überfahren der Sender, ganze Staffel oder Serie auf einmal als gesehen markieren, Desktop-Verknüpfung nach Wahl und eine native Version für Windows-on-ARM-PCs. Es wird allen empfohlen.
+
+### Neu
+
+- Bleiben Sie in der Senderliste des Players kurz mit der Maus auf einem Sender, um seine Übersicht zu sehen: die laufende Sendung (Uhrzeit, Fortschritt, Restzeit, Genre, Folge, Inhalt und Bild, wenn der Programmführer sie liefert) und die nächsten Sendungen. Sie folgt der Einstellung „Vorschau beim Überfahren“ und ihrer Verzögerung, wie bei den Postern.
+- Serien: Markieren Sie eine ganze Staffel oder die ganze Serie auf einmal als gesehen (oder nicht gesehen), mit den Schaltflächen auf der Serienseite. Das Kontextmenü eines Serienposters bietet außerdem „Ganze Serie als gesehen markieren“. Die Wiedergabe-Schaltfläche beginnt dann mit der ersten nicht gesehenen Folge.
+- Installation: Die Desktop-Verknüpfung wird nicht mehr erzwungen. Beim ersten Start fragt MilfTV, ob Sie eine möchten, und Sie können sie jederzeit unter Einstellungen › Daten und Info hinzufügen oder entfernen. Beim Deinstallieren wird sie entfernt. Die Verknüpfung im Startmenü wird weiterhin angelegt.
+- Startseite: Die horizontalen Reihen lassen sich leichter blättern. Ihre Bildlaufleiste wurde in den Farben der Anwendung neu gestaltet (ein Griff in der Akzentfarbe, der beim Überfahren breiter wird) und ist immer sichtbar, beim Überfahren erscheinen Pfeile, um eine Bildschirmbreite weiterzugehen, und Sie können eine Reihe mit der Maus seitlich ziehen (linke Taste gedrückt halten, auch auf einem Poster). Dasselbe gilt für Besetzung und In derselben Kategorie auf den Detailseiten.
+- Mini-Player: Stellen Sie die Lautstärke direkt ein, mit einem Schieberegler neben der Ton-Schaltfläche (und der Prozentangabe, wenn genug Platz ist) oder mit dem Mausrad über dem Mini-Player.
+- Film- und Serienseiten: Medieninformationen. Markierungen unter dem Titel (4K, HDR, HEVC, 5.1, Sprachen) und ein Abschnitt Medieninformationen: Auflösung, Video, Audio, Audiosprachen, Untertitel, Dauer, Bitrate, Format und Originalsprache. Ihr Anbieter liefert sie, und die erste Wiedergabe ergänzt sie (alle Audiosprachen und Untertitel). Bei Serien hat jede Folge ihre technische Zeile und die Seite fasst die Staffel zusammen.
+- Alle Bildlaufleisten der Anwendung haben den neuen Stil: eine dezente Spur und ein Griff in der Akzentfarbe, der beim Überfahren breiter wird.
+- Vorschau beim Überfahren der Poster: Sie zeigt jetzt auch die Medieninformationen (Auflösung, HDR, Codec, Ton, Sprachen) und bei Serien die Länge einer Folge.
+- Automatische Wiedergabe: Wählen Sie, wann der Countdown zur nächsten Folge beginnt (Einstellungen › Automatische Wiedergabe): am Ende der Folge, wie bisher, oder vor dem Ende, während des Abspanns, damit die nächste Folge direkt am Ende startet. Der Countdown kann jetzt bis zu 60 Sekunden dauern.
+- Windows on ARM: eine native ARM64-Version für PCs mit Snapdragon-Prozessoren und anderen ARM-Chips, mit eigenem Installationsprogramm und eigenen automatischen Updates.
+
+### Sicherheit
+
+- Stream-Adressen aus Playlists und Portalen werden jetzt geprüft: Netzwerkfreigaben und interne Protokolle der Video-Engine werden abgelehnt. Eine bösartige Playlist kann Windows nicht mehr dazu bringen, einen Hash Ihres Kontopassworts an einen unbekannten Server zu senden.
+- HTTPS-Zertifikate von IPTV-Servern werden jetzt überprüft. Verwendet Ihr Anbieter ein ungültiges Zertifikat, aktivieren Sie „Ungültiges Zertifikat akzeptieren“ in den erweiterten Optionen der Quelle (nicht empfohlen).
+- Benutzernamen, Passwörter und Tokens werden im Protokoll maskiert, sodass es einer Fehlermeldung beigefügt werden kann.
+- Die Jugendschutz-PIN wird als gesalzener Hash gespeichert, und wiederholte falsche PINs oder Profilpasswörter erzwingen jetzt eine zunehmende Wartezeit (von 5 Sekunden bis 5 Minuten).
+- Übergroße Playlists, Kataloge oder Programmführer werden abgelehnt, statt den Speicher zu füllen.
+- Der Trailer-Player lehnt Downloads sowie Zugriffe auf Kamera, Mikrofon, Standort oder Benachrichtigungen ab.
+- Testwerkzeuge sind in veröffentlichten Versionen nicht mehr enthalten.
+- Vor einer Wiederherstellung werden die Quellserver der Sicherung und gegebenenfalls ihr Netzwerkordner für Aufnahmen angezeigt.
+
+### Korrekturen
+
+- Der Titel „Wer schaut zu?“ folgt einem Sprachwechsel.
+- In Meine Liste bewirkte „Als gesehen markieren“ bei einer Serie nichts: Jetzt werden alle ihre Folgen markiert.
+
 ## 1.0.0-beta.1
 
 *Veröffentlicht am 2026-11-23*

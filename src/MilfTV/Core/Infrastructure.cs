@@ -58,6 +58,31 @@ public static class PathSafety
     }
 }
 
+/// <summary>Adresses qu'on accepte d'ouvrir dans le moteur vidéo. Les playlists et portails sont des données non
+/// fiables : un partage réseau (\\serveur\partage) ferait envoyer par Windows l'empreinte du mot de passe du compte au
+/// serveur, et les protocoles internes de mpv (edl://, av://, memory://…) n'ont rien à faire dans une source IPTV.
+/// Acceptés : protocoles de diffusion réseau et fichiers sur un lecteur local.</summary>
+public static class StreamUrlPolicy
+{
+    private static readonly HashSet<string> NetworkSchemes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "http", "https", "rtmp", "rtmps", "rtmpe", "rtmpt", "rtmpte", "rtmpts", "rtsp", "rtsps", "rtp", "udp", "srt", "mms", "mmsh", "mmst",
+    };
+
+    public static bool IsAllowed(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        var u = url.Trim();
+        // Partage réseau sous toutes ses formes (\\hôte, //hôte, file://hôte) : refusé.
+        if (u.StartsWith(@"\\", StringComparison.Ordinal) || u.StartsWith("//", StringComparison.Ordinal)) return false;
+        if (PathSafety.IsLocalFile(u)) return true;
+        var colon = u.IndexOf(':');
+        if (colon <= 1) return false;
+        var scheme = u[..colon];
+        return NetworkSchemes.Contains(scheme) && Uri.TryCreate(u, UriKind.Absolute, out var parsed) && !string.IsNullOrEmpty(parsed.Host);
+    }
+}
+
 public static class Log
 {
     private static readonly object Gate = new();
@@ -80,10 +105,30 @@ public static class Log
 
     private static int _writes;
 
+    // Identifiants qui peuvent apparaître dans une adresse (messages du moteur vidéo, erreurs réseau) :
+    // chemins Xtream /live|movie|series|timeshift/<utilisateur>/<mot de passe>/, paramètres username, password,
+    // token, mac…, et identifiants dans l'adresse (http://utilisateur:motdepasse@serveur).
+    private static readonly System.Text.RegularExpressions.Regex XtreamPath = new(
+        @"/(live|movie|series|timeshift|timeshifts)/[^/\s?#]+/[^/\s?#]+/", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex SecretQuery = new(
+        @"\b(username|user|password|pass|pwd|token|play_token|mac|api_key|auth|key)=([^&\s""'#]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex UserInfo = new(
+        @"([a-z][a-z0-9+.-]*://)[^/\s@:]+:[^/\s@]+@", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>Masque les identifiants : le journal peut être joint à un signalement public.</summary>
+    public static string Redact(string msg)
+    {
+        if (string.IsNullOrEmpty(msg)) return msg;
+        msg = XtreamPath.Replace(msg, "/$1/***/***/");
+        msg = SecretQuery.Replace(msg, "$1=***");
+        return UserInfo.Replace(msg, "$1***:***@");
+    }
+
     private static void Write(string level, string msg)
     {
         try
         {
+            msg = Redact(msg);
             lock (Gate)
             {
                 File.AppendAllText(FilePath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {level} {msg}{Environment.NewLine}");
@@ -142,10 +187,50 @@ public static class Secret
         return CryptographicOperations.FixedTimeEquals(actual, expected);
     }
 
-    public static string HashPin(string pin)
+    /// <summary>Empreinte du code parental : PBKDF2 salé, comme les mots de passe de profil. (Un code de 4 chiffres
+    /// reste vite retrouvé par qui peut lire les réglages : le sel et le coût évitent au moins une table toute faite.)</summary>
+    public static string HashPin(string pin) => HashPassword("milftv-pin:" + pin);
+
+    /// <summary>Vérifie un code parental ; legacy = ancienne empreinte (SHA-256 sans sel), à remplacer après succès.</summary>
+    public static bool VerifyPin(string pin, string? stored, out bool legacy)
     {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes("milftv-pin:" + pin));
-        return Convert.ToHexString(bytes);
+        legacy = false;
+        if (string.IsNullOrEmpty(stored)) return false;
+        if (stored.StartsWith("pbkdf2$", StringComparison.Ordinal)) return VerifyPassword("milftv-pin:" + pin, stored);
+        legacy = true;
+        var old = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("milftv-pin:" + pin)));
+        return CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(old), Encoding.ASCII.GetBytes(stored));
+    }
+}
+
+/// <summary>Limite les essais de code (code parental, mots de passe de profil) : après 3 erreurs, une attente
+/// qui double à chaque nouvelle erreur (5 s, 10 s, 20 s… jusqu'à 5 min). Remis à zéro par un code correct.</summary>
+public static class AttemptGuard
+{
+    private const int FreeAttempts = 3;
+    private static readonly Dictionary<string, (int Failures, DateTime Until)> State = new();
+
+    /// <summary>Temps d'attente restant avant de pouvoir réessayer (zéro si aucun).</summary>
+    public static TimeSpan Remaining(string key)
+    {
+        lock (State)
+            return State.TryGetValue(key, out var s) && s.Until > DateTime.UtcNow ? s.Until - DateTime.UtcNow : TimeSpan.Zero;
+    }
+
+    public static void Failed(string key)
+    {
+        lock (State)
+        {
+            var failures = (State.TryGetValue(key, out var s) ? s.Failures : 0) + 1;
+            var wait = failures <= FreeAttempts ? TimeSpan.Zero
+                : TimeSpan.FromSeconds(Math.Min(300, 5 * Math.Pow(2, failures - FreeAttempts - 1)));
+            State[key] = (failures, DateTime.UtcNow + wait);
+        }
+    }
+
+    public static void Succeeded(string key)
+    {
+        lock (State) State.Remove(key);
     }
 }
 
@@ -168,11 +253,48 @@ public static class Http
 {
     public const string DefaultUserAgent = "MilfTV/1.0 (Windows)";
 
-    /// <summary>Client pour les serveurs IPTV (certificats souvent invalides chez les fournisseurs).</summary>
-    public static HttpClient Iptv { get; } = Create(acceptAnyCertificate: true);
-
-    /// <summary>Client strict pour les services tiers (TMDB, images…).</summary>
+    /// <summary>Client strict (certificats vérifiés) : services tiers et, par défaut, les serveurs IPTV.</summary>
     public static HttpClient Web { get; } = Create(acceptAnyCertificate: false);
+
+    /// <summary>Client tolérant : réservé aux serveurs des sources où l'utilisateur a accepté un certificat non valide.
+    /// Sans cela, quelqu'un sur le même réseau (Wi-Fi public…) pourrait intercepter une connexion HTTPS.</summary>
+    private static HttpClient Lenient { get; } = Create(acceptAnyCertificate: true);
+
+    /// <summary>Client pour une source : tolérant seulement si l'utilisateur l'a choisi pour elle.</summary>
+    public static HttpClient ForSource(SourceConfig? source) => For(source?.AllowInvalidCertificate == true);
+
+    /// <summary>Client strict, ou tolérant si l'utilisateur a accepté un certificat non valide pour ce serveur.</summary>
+    public static HttpClient For(bool allowInvalidCertificate) => allowInvalidCertificate ? Lenient : Web;
+
+    /// <summary>Client pour une adresse : tolérant seulement si elle vise le serveur (ou le guide TV) d'une source
+    /// pour laquelle l'utilisateur a accepté un certificat non valide.</summary>
+    public static HttpClient ForUrl(string? url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var u) || string.IsNullOrEmpty(u.Host)) return Web;
+        try
+        {
+            foreach (var s in Data.SettingsStore.Current.Sources.ToArray())
+            {
+                if (!s.AllowInvalidCertificate) continue;
+                if (SameHost(s.Url, u.Host) || SameHost(s.EpgUrl, u.Host)) return Lenient;
+            }
+        }
+        catch { /* liste modifiée pendant la lecture : client strict */ }
+        return Web;
+    }
+
+    private static bool SameHost(string? url, string host) =>
+        !string.IsNullOrWhiteSpace(url)
+        && Uri.TryCreate(url.Contains("://") ? url : "http://" + url, UriKind.Absolute, out var u)
+        && string.Equals(u.Host, host, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Échec dû au certificat du serveur (non valide, expiré, autosigné…).</summary>
+    public static bool IsCertificateError(Exception? ex)
+    {
+        for (var e = ex; e is not null; e = e.InnerException)
+            if (e is System.Security.Authentication.AuthenticationException) return true;
+        return false;
+    }
 
     private static HttpClient Create(bool acceptAnyCertificate)
     {
@@ -212,8 +334,15 @@ public static class Http
         using var req = Request(url, userAgent);
         using var resp = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();
-        return await resp.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+        await using var stream = await resp.Content.ReadAsStreamAsync(cts.Token).ConfigureAwait(false);
+        using var limited = new LimitedStream(stream, MaxDocumentBytes);
+        using var reader = new StreamReader(limited, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return await reader.ReadToEndAsync(cts.Token).ConfigureAwait(false);
     }
+
+    /// <summary>Taille maximale d'une playlist ou d'une réponse JSON (les plus gros catalogues font quelques dizaines
+    /// de Mo) : au-delà, un serveur malveillant ou défaillant ne doit pas pouvoir saturer la mémoire.</summary>
+    public const long MaxDocumentBytes = 256L * 1024 * 1024;
 
     public static async Task<JsonDocument> GetJsonAsync(HttpClient client, string url, string? userAgent, TimeSpan timeout, CancellationToken ct)
     {
@@ -223,7 +352,45 @@ public static class Http
         using var resp = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();
         await using var stream = await resp.Content.ReadAsStreamAsync(cts.Token).ConfigureAwait(false);
-        return await JsonDocument.ParseAsync(stream, new JsonDocumentOptions { AllowTrailingCommas = true }, cts.Token).ConfigureAwait(false);
+        using var limited = new LimitedStream(stream, MaxDocumentBytes);
+        return await JsonDocument.ParseAsync(limited, new JsonDocumentOptions { AllowTrailingCommas = true }, cts.Token).ConfigureAwait(false);
+    }
+}
+
+/// <summary>Flux en lecture qui s'arrête (IOException) au-delà d'une taille donnée : protège la mémoire et le disque
+/// contre une réponse démesurée (playlist, guide TV, archive compressée « bombe »).</summary>
+public sealed class LimitedStream(Stream inner, long maxBytes) : Stream
+{
+    private long _read;
+
+    public override bool CanRead => true;
+    public override bool CanSeek => false;
+    public override bool CanWrite => false;
+    public override long Length => throw new NotSupportedException();
+    public override long Position { get => _read; set => throw new NotSupportedException(); }
+
+    private int Count(int n)
+    {
+        _read += n;
+        if (_read > maxBytes) throw new IOException(Localization.Loc.T("Err.TooLarge", maxBytes / (1024 * 1024)));
+        return n;
+    }
+
+    public override int Read(byte[] buffer, int offset, int count) => Count(inner.Read(buffer, offset, count));
+    public override int Read(Span<byte> buffer) => Count(inner.Read(buffer));
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken ct = default) =>
+        Count(await inner.ReadAsync(buffer, ct).ConfigureAwait(false));
+    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct) =>
+        ReadAsync(buffer.AsMemory(offset, count), ct).AsTask();
+    public override void Flush() { }
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+    public override void SetLength(long value) => throw new NotSupportedException();
+    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) inner.Dispose();
+        base.Dispose(disposing);
     }
 }
 

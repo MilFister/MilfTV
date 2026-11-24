@@ -84,6 +84,10 @@
           <TextBlock Classes="caption" Text="{l:Tr Ui.UserAgentHttpSiVotre}" />
           <TextBox Text="{Binding UserAgent}" Watermark="{l:Tr Ui.ParDefaut}" />
         </StackPanel>
+        <StackPanel Spacing="4">
+          <CheckBox IsChecked="{Binding AllowInvalidCertificate}" Content="{l:Tr Source.AllowInvalidCert}" />
+          <TextBlock Classes="caption" TextWrapping="Wrap" Text="{l:Tr Source.AllowInvalidCertHint}" />
+        </StackPanel>
       </StackPanel>
 
       <!-- État -->

@@ -96,6 +96,7 @@ public sealed partial class Library
         {
             s.IsFavorite = inList.Contains(s.Key);
             s.IsInProgress = seriesActivity.Contains(s.Id);
+            s.IsWatched = watch.GetValueOrDefault(s.Key)?.Watched == true;
         }
     }
 
@@ -109,6 +110,10 @@ public sealed partial class Library
         else if (e.Kind == ContentKind.Episode && e.ParentId is not null && c.SeriesById.TryGetValue(e.ParentId, out var s))
         {
             s.IsInProgress = true;
+        }
+        else if (e.Kind == ContentKind.Series && c.SeriesById.TryGetValue(e.ItemId, out var done))
+        {
+            done.IsWatched = e.Watched;
         }
     }
 
@@ -184,9 +189,80 @@ public sealed partial class Library
     {
         if (Source is null) return;
         UserDataStore.RemoveSeriesHistory(Source.Id, ProfileId, s.Id);
+        UserDataStore.RemoveWatch(Source.Id, ProfileId, s.Key);
         lock (_watchGate)
+        {
             foreach (var k in _watch.Where(kv => kv.Value.ParentId == s.Id).Select(kv => kv.Key).ToList()) _watch.Remove(k);
+            _watch.Remove(s.Key);
+        }
         s.IsInProgress = false;
+        s.IsWatched = false;
+    }
+
+    /// <summary>Marque d'un coup des épisodes d'une série comme vus (ou non vus) pour le profil. Rend le nombre
+    /// d'épisodes changés, ou -1 si l'historique est désactivé pour le profil (rien n'est alors enregistré).</summary>
+    public int SetEpisodesWatched(Series series, IReadOnlyList<Episode> episodes, bool watched)
+    {
+        if (Source is not { } src || episodes.Count == 0) return 0;
+        if (!watched)
+        {
+            List<string> keys;
+            lock (_watchGate) keys = episodes.Select(e => e.Key).Where(_watch.ContainsKey).ToList();
+            try { UserDataStore.RemoveWatchMany(src.Id, ProfileId, keys); }
+            catch (Exception ex) { Log.Warn("Historique non modifié : " + ex.Message); return 0; }
+            lock (_watchGate) foreach (var k in keys) _watch.Remove(k);
+            if (Catalog is { } c) ApplyProfileFlags(c);
+            return keys.Count;
+        }
+        if (!Prefs.TrackHistory) return -1;
+        var entries = new List<WatchEntry>();
+        var title = TextNorm.StripPrefix(series.Name);
+        lock (_watchGate)
+            foreach (var ep in episodes)
+            {
+                var old = _watch.GetValueOrDefault(ep.Key);
+                if (old?.Watched == true) continue; // déjà vu : sa date est gardée
+                var duration = old is { Duration: > 1 } ? old.Duration : ep.DurationSecs is > 0 ? ep.DurationSecs.Value : 1;
+                entries.Add(new WatchEntry
+                {
+                    SourceId = src.Id, ProfileId = ProfileId, Key = ep.Key, Kind = ContentKind.Episode, ItemId = ep.Id, ParentId = series.Id,
+                    Title = title, Subtitle = string.IsNullOrWhiteSpace(ep.Title) ? ep.Code : $"{ep.Code} · {ep.Title}",
+                    ImageUrl = ep.ImageUrl ?? series.ImageUrl, Position = duration, Duration = duration, Watched = true,
+                });
+            }
+        // Dates croissantes dans l'ordre des épisodes : le dernier marqué devient la dernière activité de la série
+        // (« Lire la suite » repart après lui). La base garde des secondes.
+        var now = DateTimeOffset.Now;
+        for (var i = 0; i < entries.Count; i++) entries[i].UpdatedAt = now.AddSeconds(i - entries.Count + 1);
+        try { UserDataStore.SaveWatchMany(entries); }
+        catch (Exception ex) { Log.Warn("Historique non enregistré : " + ex.Message); return 0; }
+        lock (_watchGate) foreach (var e in entries) _watch[e.Key] = e;
+        if (entries.Count > 0) series.IsInProgress = true;
+        return entries.Count;
+    }
+
+    /// <summary>Série vue en entier (pastille « VU », hors des suggestions et des séries en cours). Le repère est
+    /// recalculé à chaque ouverture de la fiche : de nouveaux épisodes chez le fournisseur le retirent.</summary>
+    public void SetSeriesCompleted(Series series, bool completed)
+    {
+        if (Source is null) return;
+        bool has;
+        lock (_watchGate) has = _watch.GetValueOrDefault(series.Key)?.Watched == true;
+        if (completed == has)
+        {
+            series.IsWatched = has;
+            return;
+        }
+        if (!completed)
+        {
+            RemoveWatch(series.Key);
+            return;
+        }
+        SaveWatch(new WatchEntry
+        {
+            Key = series.Key, Kind = ContentKind.Series, ItemId = series.Id, Title = TextNorm.StripPrefix(series.Name),
+            ImageUrl = series.ImageUrl, Position = 1, Duration = 1, Watched = true,
+        });
     }
 
     // ───────────── Suggestions ─────────────

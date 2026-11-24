@@ -4,6 +4,41 @@
 
 Tutte le modifiche rilevanti di MilfTV, dalla più recente.
 
+## 1.0.0-beta.2
+
+*Pubblicata il 2026-11-24*
+
+Aggiornamento di sicurezza dopo una verifica completa dell'applicazione, con novità: informazioni sul contenuto in schede e anteprime, scheda dei programmi al passaggio sui canali, stagione o serie intera segnata come vista in un colpo solo, collegamento sul desktop a scelta e una versione nativa per i PC Windows su ARM. È consigliato a tutti.
+
+### Novità
+
+- Nell'elenco dei canali del lettore, lascia il mouse un attimo su un canale per vederne la scheda: il programma in corso (orario, avanzamento, tempo restante, genere, episodio, trama e immagine quando la guida li fornisce) e i programmi successivi. Segue l'impostazione «Anteprima al passaggio» e il suo ritardo, come le locandine.
+- Serie: segna in un colpo solo un'intera stagione o tutta la serie come vista (o non vista), con i pulsanti della scheda della serie. Il menu contestuale della locandina di una serie offre anche «Segna tutta la serie come vista». Il pulsante di riproduzione riparte quindi dal primo episodio non visto.
+- Installazione: il collegamento sul desktop non è più imposto. Al primo avvio MilfTV ti chiede se ne vuoi uno, e puoi aggiungerlo o toglierlo in qualsiasi momento in Impostazioni › Dati e informazioni. Viene rimosso alla disinstallazione. Il collegamento nel menu Start viene sempre creato.
+- Home: le file orizzontali si scorrono più facilmente. La barra di scorrimento è stata ridisegnata con i colori dell'applicazione (una maniglia nel colore d'accento che si ingrossa al passaggio del mouse) ed è sempre visibile, al passaggio del mouse compaiono delle frecce per avanzare di una schermata, e puoi trascinare una fila di lato con il mouse (tasto sinistro premuto, anche su una locandina). Lo stesso vale per Cast e Nella stessa categoria nelle schede.
+- Mini lettore: regola il volume direttamente, con un cursore accanto al pulsante dell'audio (e la percentuale quando c'è spazio), oppure con la rotellina del mouse sul mini lettore.
+- Schede di film e serie: informazioni sul contenuto. Etichette sotto il titolo (4K, HDR, HEVC, 5.1, lingue) e una sezione Informazioni sul contenuto: risoluzione, video, audio, lingue audio, sottotitoli, durata, bitrate, formato e lingua originale. Le indica il tuo fornitore e la prima riproduzione le completa (tutte le lingue audio e i sottotitoli). Per le serie, ogni episodio ha la sua riga tecnica e la scheda riassume la stagione.
+- Tutte le barre di scorrimento dell'applicazione adottano il nuovo stile: una traccia discreta e una maniglia nel colore d'accento che si ingrossa al passaggio del mouse.
+- Anteprima al passaggio sulle locandine: mostra anche le informazioni sul contenuto (risoluzione, HDR, codec, audio, lingue) e, per le serie, la durata di un episodio.
+- Riproduzione automatica: scegli quando parte il conto alla rovescia dell'episodio successivo (Impostazioni › Riproduzione automatica): alla fine dell'episodio, come prima, o prima della fine, durante i titoli di coda, così l'episodio successivo inizia appena questo finisce. Il conto alla rovescia può ora durare fino a 60 secondi.
+- Windows su ARM: una versione ARM64 nativa per i PC con processori Snapdragon e altri chip ARM, con il proprio programma di installazione e i propri aggiornamenti automatici.
+
+### Sicurezza
+
+- Gli indirizzi dei flussi di playlist e portali vengono ora controllati: le cartelle di rete e i protocolli interni del motore video sono rifiutati. Una playlist malevola non può più far inviare da Windows l'impronta della password del tuo account a un server sconosciuto.
+- I certificati HTTPS dei server IPTV vengono ora verificati. Se il tuo fornitore usa un certificato non valido, seleziona «Accetta un certificato non valido» nelle opzioni avanzate della sorgente (sconsigliato).
+- Nomi utente, password e token sono mascherati nel log, che può quindi essere allegato a una segnalazione.
+- Il codice parentale è conservato come impronta con sale, e gli errori ripetuti di codice o di password del profilo impongono ora un'attesa crescente (da 5 secondi a 5 minuti).
+- Playlist, cataloghi o guide TV smisurati vengono rifiutati invece di saturare la memoria.
+- Il lettore dei trailer rifiuta i download e le richieste di fotocamera, microfono, posizione o notifiche.
+- Gli strumenti di test non sono più inclusi nelle versioni pubblicate.
+- Prima di un ripristino vengono mostrati i server delle sorgenti del backup e, se presente, la sua cartella di rete per le registrazioni.
+
+### Correzioni
+
+- Il titolo «Chi sta guardando?» segue il cambio di lingua.
+- In La mia lista, «Segna come visto» non faceva nulla su una serie: ora segna tutti i suoi episodi.
+
 ## 1.0.0-beta.1
 
 *Pubblicata il 2026-11-23*

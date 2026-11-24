@@ -156,6 +156,29 @@ public static class Backup
         return m;
     }
 
+    /// <summary>Ce que la restauration va mettre en place, à montrer avant de confirmer (une sauvegarde peut venir
+    /// d'ailleurs) : serveurs des sources, et dossier des enregistrements s'il s'agit d'un partage réseau.</summary>
+    public static (IReadOnlyList<string> Servers, string? NetworkRecordingsFolder) ReadRestoreDetails(string path)
+    {
+        try
+        {
+            using var zip = ZipFile.OpenRead(path);
+            var node = JsonNode.Parse(ReadEntry(zip.GetEntry("settings.json")!))!.AsObject();
+            var servers = (node["Sources"] as JsonArray ?? new JsonArray()).OfType<JsonObject>()
+                .Select(s => s["Url"]?.GetValue<string>() ?? "")
+                .Select(u => Uri.TryCreate(u.Contains("://") ? u : "http://" + u, UriKind.Absolute, out var x) && !x.IsFile ? x.Host : Path.GetFileName(u))
+                .Where(h => !string.IsNullOrWhiteSpace(h))
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var folder = node["RecordingsFolder"]?.GetValue<string>();
+            var network = folder is not null && (folder.StartsWith(@"\\", StringComparison.Ordinal) || folder.StartsWith("//", StringComparison.Ordinal)) ? folder : null;
+            return (servers, network);
+        }
+        catch
+        {
+            return (Array.Empty<string>(), null);
+        }
+    }
+
     /// <summary>Le mot de passe de la sauvegarde est-il le bon ?</summary>
     public static bool CheckPassword(string path, string password)
     {

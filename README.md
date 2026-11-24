@@ -87,11 +87,13 @@ Download the latest version from the [Releases](https://github.com/MilFister/Mil
 
 | File | What it is |
 |---|---|
-| `MilfTV.App-beta-Setup.exe` | **Installer (recommended).** Installs MilfTV for your Windows account, without administrator rights, with desktop and Start menu shortcuts and automatic updates. |
+| `MilfTV.App-beta-Setup.exe` | **Installer (recommended).** Installs MilfTV for your Windows account, without administrator rights, with a Start menu shortcut and automatic updates; a desktop shortcut is offered at first launch. |
 | `MilfTV.App-beta-Portable.zip` | **Portable version.** Unzip it anywhere and run `MilfTV.exe`; nothing is installed. |
+| `MilfTV.App-beta-arm64-Setup.exe` | **Installer for Windows on ARM** (ARM64 PCs, e.g. Snapdragon). Same as above, native ARM64 version. |
+| `MilfTV.App-beta-arm64-Portable.zip` | **Portable version for Windows on ARM.** |
 
 **Requirements**
-- Windows 10 or 11, 64-bit.
+- Windows 10 or 11, on a 64-bit PC (Intel / AMD) or a Windows on ARM PC (ARM64).
 - A graphics card with Direct3D 11 and an up-to-date driver.
 - The WebView2 runtime (included in Windows 10/11) for trailers.
 
@@ -136,6 +138,8 @@ MilfTV has **no account, no advertising and no telemetry**. It only connects to:
 
 Source passwords and the TMDB key are encrypted with your Windows account (DPAPI); profile passwords and the parental PIN are stored as hashes only.
 
+Parental control keeps children away from adult content and protected settings, but someone who can use your Windows session can still edit the settings file. For real separation, give each child their own Windows account.
+
 **Backup and restore** (Settings › Data and about) saves your profiles, sources, settings, history, My List, favourites and recordings list to a `.milftv-backup` file. Recorded videos, the TV guide and caches are not included. Add a backup password to restore source passwords on another PC.
 
 ## Keyboard shortcuts
@@ -160,6 +164,7 @@ Source passwords and the TMDB key are encrypted with your Windows account (DPAPI
 
 - **Sound but no picture** (virtual machine, remote desktop, very old driver): MilfTV needs Direct3D 11 graphics acceleration. Update your graphics driver.
 - **The window does not appear**: MilfTV switches to compatible display mode by itself at the next start. You can also start it with `MilfTV.exe --safe-mode`.
+- **"The server's security certificate is not valid"**: your provider uses an invalid HTTPS certificate. If you trust it, tick "Accept an invalid certificate" in the source's advanced options; on a public network, the connection to that server could then be intercepted.
 - **A channel does not play**: check it in another player; MilfTV reconnects live streams automatically up to 5 times in 2 minutes.
 - **Logs**: Settings › Data and about › Open logs folder. Attach the latest log to your bug report after a quick look: it may mention your server address.
 
@@ -167,7 +172,7 @@ Source passwords and the TMDB key are encrypted with your Windows account (DPAPI
 
 Requirements: Windows, the [.NET 10 SDK](https://dotnet.microsoft.com/download) and the WebView2 runtime.
 
-1. Download a **libmpv** build (`mpv-dev-x86_64-*.7z` from [shinchiro/mpv-winbuild-cmake](https://github.com/shinchiro/mpv-winbuild-cmake/releases)) and copy `libmpv-2.dll` into `native/`. At about 120 MB it is too large for the repository. `native/vulkan-1.dll` (Khronos Vulkan loader) is already there.
+1. Download a **libmpv** build (`mpv-dev-x86_64-*.7z` from [shinchiro/mpv-winbuild-cmake](https://github.com/shinchiro/mpv-winbuild-cmake/releases)) and copy `libmpv-2.dll` into `native/`. At about 120 MB it is too large for the repository. `native/vulkan-1.dll` (Khronos Vulkan loader) is already there. For the **ARM64** version (Windows on ARM PCs), put the `libmpv-2.dll` from `mpv-dev-aarch64-*.7z` into `native/arm64/` (its ARM64 Vulkan loader is already there) and run `release.ps1` with `-Arch arm64`: it uses its own update channels.
 2. Build and run:
 
 ```powershell
@@ -177,7 +182,7 @@ dotnet build src/MilfTV -c Debug
 3. Release build with the installer (Velopack, restored through `dotnet tool restore`):
 
 ```powershell
-.\build\release.ps1 -UpdateRepo https://github.com/MilFister/MilfTV -Version 1.0.0-beta.1 -Channel beta
+.\build\release.ps1 -UpdateRepo https://github.com/MilFister/MilfTV -Version 1.0.0-beta.2 -Channel beta
 ```
 
 `build\release.ps1` publishes a single-file executable, builds the installer, the portable zip and the update packages in `artifacts\releases`, attaches the release notes, and can publish to GitHub (`-Upload`, with `$env:GITHUB_TOKEN`) or sign the files (`-SignParams`, `-AzureSignFile`). `build\changelog.ps1` regenerates the `CHANGELOG` files from `src/MilfTV/Assets/changelog.json`, which the app displays too.

@@ -190,7 +190,8 @@ public sealed class PosterPreviewController
                && !main.Player.IsFullView
                && main.Dialog is null
                && main.ProfileOverlay is null
-               && !main.IsTrailerOpen;
+               && !main.IsTrailerOpen
+               && !Controls.Rail.IsDragging;
     }
 
     private void Open(PosterCard card)

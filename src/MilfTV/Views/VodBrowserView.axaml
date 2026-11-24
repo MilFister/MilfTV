@@ -86,10 +86,24 @@
                           </MultiBinding>
                         </MenuItem.IsVisible>
                       </MenuItem>
+                      <MenuItem Header="{l:Tr Vod.MarkSeriesWatchedMenu}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}">
+                        <MenuItem.IsVisible>
+                          <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="!IsWatched" />
+                            <Binding Path="Kind" Converter="{x:Static ctl:Conv.Eq}" ConverterParameter="Series" />
+                          </MultiBinding>
+                        </MenuItem.IsVisible>
+                      </MenuItem>
                       <MenuItem Header="{l:Tr Vod.MarkUnwatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkUnwatchedCommand}" CommandParameter="{Binding}"
                                 IsVisible="{Binding IsWatched}" />
-                      <MenuItem Header="{l:Tr MyList.RemoveHistory}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkUnwatchedCommand}" CommandParameter="{Binding}"
-                                IsVisible="{Binding IsInProgress}" />
+                      <MenuItem Header="{l:Tr MyList.RemoveHistory}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkUnwatchedCommand}" CommandParameter="{Binding}">
+                        <MenuItem.IsVisible>
+                          <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="IsInProgress" />
+                            <Binding Path="!IsWatched" />
+                          </MultiBinding>
+                        </MenuItem.IsVisible>
+                      </MenuItem>
                     </ContextMenu>
                   </Button.ContextMenu>
                   <v:PosterCard />

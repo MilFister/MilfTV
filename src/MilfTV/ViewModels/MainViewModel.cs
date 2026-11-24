@@ -511,6 +511,43 @@ public sealed partial class MainViewModel : ViewModelBase
         return vm.Task;
     }
 
+    /// <summary>Menu d'une affiche de série : tous ses épisodes marqués comme vus (liste lue chez le fournisseur).</summary>
+    public async Task MarkSeriesWatchedAsync(Series series)
+    {
+        if (Lib.Provider is not { } provider) return;
+        try
+        {
+            var details = await provider.GetSeriesDetailsAsync(series, CancellationToken.None);
+            var episodes = details?.Seasons.SelectMany(s => s.Episodes).ToList() ?? new();
+            if (episodes.Count == 0)
+            {
+                Toast(Loc.T("Vod.NoEpisodes"), error: true);
+                return;
+            }
+            var count = Lib.SetEpisodesWatched(series, episodes, true);
+            if (count >= 0) Lib.SetSeriesCompleted(series, true);
+            ReportEpisodesMarked(series, count, true);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("Série marquée vue : " + ex.Message);
+            Toast(Loc.T("Vod.EpisodesError", ex.Message), error: true);
+        }
+    }
+
+    /// <summary>Résultat d'un marquage groupé d'épisodes (saison ou série) : rafraîchit les listes et l'annonce.</summary>
+    public void ReportEpisodesMarked(Series series, int count, bool watched)
+    {
+        if (count < 0)
+        {
+            Toast(Loc.T("Vod.HistoryOff"), Loc.T("Vod.HistoryOffHint"));
+            return;
+        }
+        OnWatchChanged();
+        var key = (watched ? "Vod.MarkedWatched" : "Vod.MarkedUnwatched") + (count == 0 ? ".None" : count == 1 ? ".One" : ".Many");
+        Toast(TextNorm.SplitYear(series.Name).Title, Loc.T(key, count));
+    }
+
     public void Toast(string title, string? message = null, bool error = false)
     {
         var t = new ToastItem { Title = title, Message = message, IsError = error };
@@ -541,6 +578,50 @@ public sealed partial class MainViewModel : ViewModelBase
     /// <summary>Notes de version (Paramètres, numéro de version, annonce après une mise à jour).</summary>
     [RelayCommand]
     public void ShowChangelog() => ShowDialog(new ChangelogDialogViewModel(this));
+
+    /// <summary>Copie installée : propose une fois le raccourci du bureau (l'installateur ne crée que celui du menu
+    /// Démarrer), dès que rien d'autre n'est affiché (choix du profil, création du premier profil, autre fenêtre).</summary>
+    public void OfferDesktopShortcutIfNeeded()
+    {
+        if (!DesktopShortcut.IsAvailable) return;
+        var s = SettingsStore.Current;
+        if (DesktopShortcut.AnyExists)
+        {
+            // Déjà sur le bureau (installation précédente, ou ajouté à la main) : rien à proposer.
+            if (!s.DesktopShortcutAsked) { s.DesktopShortcutAsked = true; SettingsStore.Save(); }
+            return;
+        }
+        if (s.DesktopShortcutAsked && !DesktopShortcut.FirstRunAfterInstall) return;
+        void Changed(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(Dialog) or nameof(ProfileOverlay)) Dispatcher.UIThread.Post(TryAsk);
+        }
+        void TryAsk()
+        {
+            if (Dialog is not null || ProfileOverlay is not null) return;
+            PropertyChanged -= Changed;
+            _ = AskDesktopShortcutAsync();
+        }
+        PropertyChanged += Changed;
+        TryAsk();
+    }
+
+    private async Task AskDesktopShortcutAsync()
+    {
+        DesktopShortcut.FirstRunAfterInstall = false;
+        SettingsStore.Current.DesktopShortcutAsked = true;
+        SettingsStore.Save();
+        var vm = new ConfirmDialogViewModel(Loc.T("Shortcut.AskTitle"), Loc.T("Shortcut.AskMsg"), Loc.T("Shortcut.AskYes"))
+        {
+            CancelText = Loc.T("Shortcut.AskNo"),
+            IsDanger = false,
+        };
+        vm.Completed += _ => Dialog = null;
+        Dialog = vm;
+        if (!await vm.Task) return;
+        if (DesktopShortcut.Create()) Toast(Loc.T("Shortcut.Added"), Loc.T("Shortcut.AddedMsg"));
+        else Toast(Loc.T("Shortcut.Failed"), error: true);
+    }
 
     /// <summary>Premier lancement après une mise à jour : annonce discrète avec accès aux nouveautés.</summary>
     public void AnnounceUpdateIfNeeded()

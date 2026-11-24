@@ -11,10 +11,50 @@ public partial class PlayerView : UserControl
 {
     private DispatcherTimer? _clickTimer;
     private static readonly Cursor Hidden = new(StandardCursorType.None);
+    private static readonly Avalonia.Controls.Templates.FuncDataTemplate<LiveChannel> ChannelPreviewTemplate = new((_, _) => new ChannelPreviewCard());
+
+    /// <summary>Fiche de la chaîne au survol de la liste des chaînes : même réglage (Aperçus au survol) et même délai
+    /// que pour les affiches de films et de séries. Elle s'ouvre à gauche de la liste, par-dessus la vidéo.</summary>
+    private void AttachChannelPreview(Control container)
+    {
+        var prefs = Library.Instance.Prefs;
+        // La ligne porte déjà sa chaîne (DataContext) ; ItemFromContainer ne la connaît pas encore à ce stade.
+        if (!prefs.HoverPreview || (container.DataContext ?? ZapList.ItemFromContainer(container)) is not LiveChannel channel)
+        {
+            ToolTip.SetTip(container, null);
+            return;
+        }
+        ToolTip.SetShowDelay(container, Math.Clamp(prefs.HoverDelayMs, 300, 5000));
+        if (ToolTip.GetTip(container) is ToolTip { Content: var shown } && ReferenceEquals(shown, channel)) return;
+        ToolTip.SetTip(container, new ToolTip
+        {
+            // La fiche n'est construite qu'à l'ouverture (modèle), pas pour chaque ligne préparée en défilant.
+            Content = channel,
+            ContentTemplate = ChannelPreviewTemplate,
+            Padding = new Thickness(0),
+            Background = Avalonia.Media.Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            MaxWidth = double.PositiveInfinity,
+        });
+        ToolTip.SetPlacement(container, PlacementMode.LeftEdgeAlignedTop);
+        ToolTip.SetHorizontalOffset(container, -12);
+    }
+
+    private void OnZapRowEntered(object? sender, PointerEventArgs e)
+    {
+        // Relu à chaque survol : un changement du réglage ou du délai s'applique aussi aux lignes déjà affichées.
+        if (sender is Control row) AttachChannelPreview(row);
+    }
 
     public PlayerView()
     {
         InitializeComponent();
+        ZapList.ContainerPrepared += (_, e) =>
+        {
+            AttachChannelPreview(e.Container);
+            e.Container.PointerEntered -= OnZapRowEntered; // une ligne recyclée est préparée plusieurs fois
+            e.Container.PointerEntered += OnZapRowEntered;
+        };
         Seek.SeekRequested += v => Vm?.SeekTo(v);
         Seek.Interacted += () => Vm?.NotifyActivity();
         Root.PointerMoved += (_, _) => Vm?.NotifyActivity();

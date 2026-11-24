@@ -429,6 +429,7 @@ public sealed partial class TmdbClient
             TrailerYoutubeKey = PickTrailer(root, lang.Code),
             TmdbId = ParseId(root.Str("id")),
             Certification = tv ? TvCertification(root, lang.Code) : MovieCertification(root, lang.Code),
+            OriginalLanguage = NullIfEmpty(root.Str("original_language")),
         };
     }
 

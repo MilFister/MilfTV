@@ -90,6 +90,16 @@
               <TextBlock Text="{Binding SeasonSummary}" Classes="muted" VerticalAlignment="Center" Margin="0,0,14,6" />
               <TextBlock Text="{Binding Genres}" Classes="muted" VerticalAlignment="Center" Margin="0,0,0,6" />
             </WrapPanel>
+            <ItemsControl ItemsSource="{Binding MediaChips}" IsVisible="{Binding HasMediaChips}" Margin="0,-6,0,0">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel ItemSpacing="8" LineSpacing="6" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <Border Classes="mediaChip"><TextBlock Text="{Binding}" /></Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
             <WrapPanel Orientation="Horizontal" Margin="0,4,0,0">
               <Button Classes="accent" Command="{Binding PlayCommand}" Padding="22,12" Margin="0,0,12,10" IsEnabled="{Binding HasSeasons}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -109,6 +119,14 @@
                   <TextBlock Text="{l:Tr Ui.BandeAnnonce}" />
                 </StackPanel>
               </Button>
+              <!-- Toute la série vue / non vue -->
+              <Button Classes="soft" Command="{Binding ToggleSeriesWatchedCommand}" IsVisible="{Binding HasSeasons}" Padding="18,12" Margin="0,0,12,10">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Classes="icon" Text="&#xE73E;" FontSize="14" />
+                  <TextBlock Text="{l:Tr Vod.MarkSeriesWatched}" IsVisible="{Binding !SeriesWatched}" />
+                  <TextBlock Text="{l:Tr Vod.MarkSeriesUnwatched}" IsVisible="{Binding SeriesWatched}" />
+                </StackPanel>
+              </Button>
             </WrapPanel>
             <TextBlock Text="{Binding Plot}" TextWrapping="Wrap" FontSize="15" LineHeight="24" MaxWidth="860" HorizontalAlignment="Left" MaxLines="7" TextTrimming="CharacterEllipsis" />
             <TextBlock Classes="muted" TextWrapping="Wrap" MaxWidth="860" HorizontalAlignment="Left" Text="{Binding Director, Converter={x:Static l:Loc.Format}, ConverterParameter=Detail.Creator}"
@@ -121,8 +139,8 @@
           <TextBlock Classes="h2" Text="{l:Tr Ui.Episodes}" />
           <Arc Classes="spinner" HorizontalAlignment="Left" IsVisible="{Binding IsLoadingDetails}" />
           <TextBlock Classes="muted" Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-          <ListBox Classes="seasons" ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}" Background="Transparent"
-                   IsVisible="{Binding HasSeasons}">
+          <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasSeasons}">
+          <ListBox Classes="seasons" ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}" Background="Transparent">
             <ListBox.ItemsPanel>
               <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
             </ListBox.ItemsPanel>
@@ -132,6 +150,15 @@
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
+            <!-- Saison affichée vue / non vue -->
+            <Button Grid.Column="1" Classes="flat" Command="{Binding ToggleSeasonWatchedCommand}" Padding="12,8" Margin="12,0,0,0" VerticalAlignment="Top">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Classes="icon" Text="&#xE73E;" FontSize="13" />
+                <TextBlock Text="{l:Tr Vod.MarkSeasonWatched}" IsVisible="{Binding !SeasonWatched}" />
+                <TextBlock Text="{l:Tr Vod.MarkSeasonUnwatched}" IsVisible="{Binding SeasonWatched}" />
+              </StackPanel>
+            </Button>
+          </Grid>
           <ItemsControl ItemsSource="{Binding Episodes}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="core:Episode">
@@ -159,6 +186,8 @@
                           <TextBlock Text="{Binding Number, Converter={x:Static l:Loc.Format}, ConverterParameter=Detail.EpisodeNumber}" Classes="accent" FontWeight="SemiBold" FontSize="13" />
                           <TextBlock Text="{Binding DurationText}" Classes="faint" FontSize="13" />
                           <TextBlock Text="{Binding AirDate}" Classes="faint" FontSize="13" />
+                          <TextBlock Text="{Binding MediaLine}" Classes="faint" FontSize="13"
+                                     IsVisible="{Binding MediaLine, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                         </StackPanel>
                         <TextBlock Text="{Binding DisplayTitle}" Classes="h3" FontSize="16" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
                         <TextBlock Text="{Binding Plot}" Classes="muted" FontSize="13.5" TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis" LineHeight="20" />
@@ -175,10 +204,32 @@
           </ItemsControl>
         </StackPanel>
 
+        <!-- Informations sur le média (fournisseur, relevé de la dernière lecture, TMDB) -->
+        <StackPanel IsVisible="{Binding HasMediaRows}" Spacing="12">
+          <TextBlock Classes="h2" Text="{Binding MediaTitle}" />
+          <ItemsControl ItemsSource="{Binding MediaRows}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><WrapPanel ItemSpacing="12" LineSpacing="12" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:MediaRow">
+                <Border Classes="mediaTile">
+                  <StackPanel Spacing="3">
+                    <TextBlock Classes="caption" Text="{Binding Label}" />
+                    <TextBlock Text="{Binding Value}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" MaxWidth="320" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Classes="faint" FontSize="12.5" Text="{Binding MediaNote}" TextWrapping="Wrap"
+                     IsVisible="{Binding MediaNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+
         <!-- Distribution -->
         <StackPanel IsVisible="{Binding HasCast}" Spacing="12">
           <TextBlock Classes="h2" Text="{l:Tr Ui.Distribution}" />
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
+          <ctl:Rail ScrollPadding="0,0,0,12">
             <ItemsControl ItemsSource="{Binding Cast}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -198,7 +249,7 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-          </ScrollViewer>
+          </ctl:Rail>
         </StackPanel>
       </StackPanel>
     </ScrollViewer>

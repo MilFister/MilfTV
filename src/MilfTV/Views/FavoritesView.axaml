@@ -41,7 +41,10 @@
               <Button.ContextMenu>
                 <ContextMenu>
                   <MenuItem Header="{l:Tr MyList.Remove}" Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveCommand}" CommandParameter="{Binding}" />
-                  <MenuItem Header="{l:Tr MyList.MarkWatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}" />
+                  <MenuItem Header="{l:Tr MyList.MarkWatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}"
+                            IsVisible="{Binding Kind, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=Movie}" />
+                  <MenuItem Header="{l:Tr Vod.MarkSeriesWatchedMenu}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}"
+                            IsVisible="{Binding Kind, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=Series}" />
                 </ContextMenu>
               </Button.ContextMenu>
               <v:PosterCard />
@@ -60,7 +63,10 @@
             <Button Classes="cardButton" Width="164" Command="{ReflectionBinding $parent[UserControl].DataContext.OpenCommand}" CommandParameter="{Binding}">
               <Button.ContextMenu>
                 <ContextMenu>
-                  <MenuItem Header="{l:Tr MyList.MarkWatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}" />
+                  <MenuItem Header="{l:Tr MyList.MarkWatched}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}"
+                            IsVisible="{Binding Kind, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=Movie}" />
+                  <MenuItem Header="{l:Tr Vod.MarkSeriesWatchedMenu}" Command="{ReflectionBinding $parent[UserControl].DataContext.MarkWatchedCommand}" CommandParameter="{Binding}"
+                            IsVisible="{Binding Kind, Converter={x:Static ctl:Conv.Eq}, ConverterParameter=Series}" />
                   <MenuItem Header="{l:Tr MyList.RemoveHistory}" Command="{ReflectionBinding $parent[UserControl].DataContext.RemoveFromHistoryCommand}" CommandParameter="{Binding}" />
                 </ContextMenu>
               </Button.ContextMenu>

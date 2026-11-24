@@ -205,6 +205,51 @@ public static class UserDataStore
             ("$w", e.Watched ? 1 : 0), ("$u", e.UpdatedAt.ToUnixTimeSeconds()));
     }
 
+    /// <summary>Plusieurs entrées en une transaction (saison ou série marquée comme vue d'un coup).</summary>
+    public static void SaveWatchMany(IReadOnlyCollection<WatchEntry> entries)
+    {
+        if (entries.Count == 0) return;
+        using var c = Open();
+        using var tx = c.BeginTransaction();
+        using var cmd = Db.Command(c, """
+            INSERT INTO watch(profile,source,key,kind,item_id,parent_id,title,subtitle,image,position,duration,watched,updated)
+            VALUES($pr,$s,$k,$kind,$id,$p,$t,$st,$img,$pos,$dur,$w,$u)
+            ON CONFLICT(profile,source,key) DO UPDATE SET kind=$kind,item_id=$id,parent_id=$p,title=$t,subtitle=$st,image=$img,
+                position=$pos,duration=$dur,watched=$w,updated=$u
+            """);
+        cmd.Transaction = tx;
+        foreach (var e in entries)
+        {
+            cmd.Parameters.Clear();
+            foreach (var (n, v) in new (string, object?)[] {
+                         ("$pr", e.ProfileId), ("$s", e.SourceId), ("$k", e.Key), ("$kind", e.Kind.ToString()), ("$id", e.ItemId),
+                         ("$p", e.ParentId), ("$t", e.Title), ("$st", e.Subtitle), ("$img", e.ImageUrl), ("$pos", e.Position),
+                         ("$dur", e.Duration), ("$w", e.Watched ? 1 : 0), ("$u", e.UpdatedAt.ToUnixTimeSeconds()) })
+                cmd.Parameters.AddWithValue(n, v ?? DBNull.Value);
+            cmd.ExecuteNonQuery();
+        }
+        tx.Commit();
+    }
+
+    /// <summary>Retire plusieurs entrées en une transaction (saison marquée comme non vue).</summary>
+    public static void RemoveWatchMany(string sourceId, string profileId, IReadOnlyCollection<string> keys)
+    {
+        if (keys.Count == 0) return;
+        using var c = Open();
+        using var tx = c.BeginTransaction();
+        using var cmd = Db.Command(c, "DELETE FROM watch WHERE source=$s AND profile=$p AND key=$k");
+        cmd.Transaction = tx;
+        foreach (var k in keys)
+        {
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("$s", sourceId);
+            cmd.Parameters.AddWithValue("$p", profileId);
+            cmd.Parameters.AddWithValue("$k", k);
+            cmd.ExecuteNonQuery();
+        }
+        tx.Commit();
+    }
+
     public static WatchEntry? GetWatch(string sourceId, string profileId, string key)
     {
         using var c = Open();

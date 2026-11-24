@@ -11,7 +11,9 @@
       "portableKind": "portable version",
       "portable": "unzip it anywhere and run MilfTV.exe; nothing is installed.",
       "smartscreen": "The installer is not signed yet. If Windows SmartScreen shows a warning, click \"More info\", then \"Run anyway\".",
-      "changes": "What's in this version"
+      "changes": "What's in this version",
+      "x64": "Windows 64-bit (Intel / AMD)",
+      "arm64": "Windows on ARM (ARM64, e.g. Snapdragon)"
     },
     "fr": {
       "name": "Français",
@@ -24,7 +26,9 @@
       "portableKind": "version portable",
       "portable": "décompressez-la où vous voulez et lancez MilfTV.exe ; rien n'est installé.",
       "smartscreen": "Le programme d'installation n'est pas encore signé. Si Windows SmartScreen affiche un avertissement, cliquez sur « Informations complémentaires », puis sur « Exécuter quand même ».",
-      "changes": "Contenu de cette version"
+      "changes": "Contenu de cette version",
+      "x64": "Windows 64 bits (Intel / AMD)",
+      "arm64": "Windows sur ARM (ARM64, par ex. Snapdragon)"
     },
     "es": {
       "name": "Español",
@@ -37,7 +41,9 @@
       "portableKind": "versión portátil",
       "portable": "descomprímela donde quieras y ejecuta MilfTV.exe; no se instala nada.",
       "smartscreen": "El instalador aún no está firmado. Si Windows SmartScreen muestra un aviso, haz clic en «Más información» y luego en «Ejecutar de todas formas».",
-      "changes": "Contenido de esta versión"
+      "changes": "Contenido de esta versión",
+      "x64": "Windows de 64 bits (Intel / AMD)",
+      "arm64": "Windows en ARM (ARM64, p. ej. Snapdragon)"
     },
     "de": {
       "name": "Deutsch",
@@ -50,7 +56,9 @@
       "portableKind": "portable Version",
       "portable": "an beliebiger Stelle entpacken und MilfTV.exe starten; es wird nichts installiert.",
       "smartscreen": "Das Installationsprogramm ist noch nicht signiert. Wenn Windows SmartScreen eine Warnung anzeigt, klicken Sie auf „Weitere Informationen“ und dann auf „Trotzdem ausführen“.",
-      "changes": "Inhalt dieser Version"
+      "changes": "Inhalt dieser Version",
+      "x64": "Windows 64 Bit (Intel / AMD)",
+      "arm64": "Windows on ARM (ARM64, z. B. Snapdragon)"
     },
     "it": {
       "name": "Italiano",
@@ -63,7 +71,9 @@
       "portableKind": "versione portatile",
       "portable": "estraila dove vuoi ed esegui MilfTV.exe; non viene installato nulla.",
       "smartscreen": "Il programma di installazione non è ancora firmato. Se Windows SmartScreen mostra un avviso, fai clic su «Ulteriori informazioni», poi su «Esegui comunque».",
-      "changes": "Contenuto di questa versione"
+      "changes": "Contenuto di questa versione",
+      "x64": "Windows a 64 bit (Intel / AMD)",
+      "arm64": "Windows su ARM (ARM64, ad es. Snapdragon)"
     },
     "pt": {
       "name": "Português",
@@ -76,10 +86,248 @@
       "portableKind": "versão portátil",
       "portable": "descompacte-a onde quiser e execute o MilfTV.exe; nada é instalado.",
       "smartscreen": "O instalador ainda não está assinado. Se o Windows SmartScreen mostrar um aviso, clique em «Mais informações» e depois em «Executar mesmo assim».",
-      "changes": "Conteúdo desta versão"
+      "changes": "Conteúdo desta versão",
+      "x64": "Windows de 64 bits (Intel / AMD)",
+      "arm64": "Windows em ARM (ARM64, por ex. Snapdragon)"
     }
   },
   "versions": [
+    {
+      "version": "1.0.0-beta.2",
+      "date": "2026-11-24",
+      "summary": {
+        "en": "Security update following a full audit of the application, with new features: media information on detail pages and previews, programme sheet when hovering channels, whole season or series marked as watched in one go, an optional desktop shortcut, and a native version for Windows on ARM PCs. Updating is recommended for everyone.",
+        "fr": "Mise à jour de sécurité, à la suite d'un audit complet de l'application, avec des nouveautés : informations sur le média dans les fiches et les aperçus, fiche des programmes au survol des chaînes, saison ou série entière marquée comme vue d'un coup, raccourci sur le bureau au choix, et une version native pour les PC Windows sur ARM. Elle est recommandée à tous.",
+        "es": "Actualización de seguridad tras una auditoría completa de la aplicación, con novedades: información del medio en las fichas y vistas previas, ficha de programas al pasar sobre los canales, temporada o serie entera marcada como vista de una vez, acceso directo en el escritorio opcional y una versión nativa para PC con Windows en ARM. Se recomienda a todos.",
+        "de": "Sicherheitsupdate nach einer vollständigen Prüfung der Anwendung, mit Neuerungen: Medieninformationen auf Detailseiten und in Vorschauen, Programmübersicht beim Überfahren der Sender, ganze Staffel oder Serie auf einmal als gesehen markieren, Desktop-Verknüpfung nach Wahl und eine native Version für Windows-on-ARM-PCs. Es wird allen empfohlen.",
+        "it": "Aggiornamento di sicurezza dopo una verifica completa dell'applicazione, con novità: informazioni sul contenuto in schede e anteprime, scheda dei programmi al passaggio sui canali, stagione o serie intera segnata come vista in un colpo solo, collegamento sul desktop a scelta e una versione nativa per i PC Windows su ARM. È consigliato a tutti.",
+        "pt": "Atualização de segurança após uma auditoria completa da aplicação, com novidades: informações do conteúdo nas fichas e pré-visualizações, ficha de programas ao passar sobre os canais, temporada ou série inteira marcada como vista de uma só vez, atalho no ambiente de trabalho opcional e uma versão nativa para PC Windows em ARM. É recomendada a todos."
+      },
+      "sections": {
+        "en": [
+          {
+            "title": "New",
+            "items": [
+              "In the player's channel list, leave the mouse on a channel for a moment to see its programme sheet: what is on now (times, progress, time left, genre, episode, synopsis and picture when the guide provides them) and the next programmes. It follows the \"Hover preview\" setting and its delay, like the posters.",
+              "Series: mark a whole season or the whole series as watched (or unwatched) in one go, with the buttons on the series page. The right-click menu of a series poster also offers \"Mark the whole series as watched\". The play button then starts from the first unwatched episode.",
+              "Installation: the desktop shortcut is no longer forced. On first launch, MilfTV asks whether you want one, and you can add or remove it at any time in Settings › Data and about. It is removed when MilfTV is uninstalled. The Start menu shortcut is still created.",
+              "Home: the horizontal rows are easier to scroll. Their scroll bar has been redesigned in the app's colours (a handle in the accent colour that thickens on hover) and is always shown, arrows appear on hover to move one screen at a time, and you can drag a row sideways with the mouse (hold the left button, even on a poster). The same goes for Cast and In the same category on the detail pages.",
+              "Mini player: set the volume right there, with a slider next to the sound button (and the percentage when there is room), or with the mouse wheel over the mini player.",
+              "Movie and series pages: media information. Badges under the title (4K, HDR, HEVC, 5.1, languages) and a Media information section: resolution, video, audio, audio languages, subtitles, duration, bitrate, format and original language. Your provider supplies them, and the first playback completes them (all audio languages and subtitles). On series, each episode gets its own technical line and the page sums up the season.",
+              "All the scroll bars in the app now share the new look: a discreet track and a handle in the accent colour that thickens on hover.",
+              "Poster hover preview: it also shows the media information (resolution, HDR, codec, sound, languages) and, for series, the length of an episode.",
+              "Autoplay: choose when the next-episode countdown starts (Settings › Autoplay): at the end of the episode, as before, or before the end, during the credits, so that the next episode begins as soon as this one ends. The countdown can now last up to 60 seconds.",
+              "Windows on ARM: a native ARM64 version for PCs with Snapdragon processors and other ARM chips, with its own installer and its own automatic updates."
+            ]
+          },
+          {
+            "title": "Security",
+            "items": [
+              "Stream addresses from playlists and portals are now checked: network shares and the video engine's internal protocols are refused. A malicious playlist can no longer make Windows send a hash of your account password to an unknown server.",
+              "HTTPS certificates of IPTV servers are now verified. If your provider uses an invalid certificate, tick \"Accept an invalid certificate\" in the source's advanced options (not recommended).",
+              "Usernames, passwords and tokens are masked in the log, so it can be attached to a bug report.",
+              "The parental PIN is stored with a salted hash, and repeated wrong PINs or profile passwords now impose an increasing wait (from 5 seconds to 5 minutes).",
+              "Oversized playlists, catalogues or TV guides are rejected instead of filling the memory.",
+              "The trailer player refuses downloads and requests for the camera, microphone, location or notifications.",
+              "Test tools are no longer included in published versions.",
+              "Before a restore, the backup's source servers and, if any, its network recordings folder are shown."
+            ]
+          },
+          {
+            "title": "Fixes",
+            "items": [
+              "The \"Who's watching?\" title follows a change of language.",
+              "In My List, \"Mark as watched\" did nothing on a series: it now marks all its episodes."
+            ]
+          }
+        ],
+        "fr": [
+          {
+            "title": "Nouveautés",
+            "items": [
+              "Dans la liste des chaînes du lecteur, laissez la souris un instant sur une chaîne pour voir sa fiche : le programme en cours (horaire, progression, temps restant, genre, épisode, résumé et image quand le guide les fournit) et les programmes suivants. Elle suit le réglage « Aperçu au survol » et son délai, comme les affiches.",
+              "Séries : marquez d'un coup toute une saison ou toute la série comme vue (ou non vue), avec les boutons de la fiche de la série. Le menu d'une affiche de série (clic droit) propose aussi « Marquer toute la série comme vue ». Le bouton de lecture repart alors du premier épisode non vu.",
+              "Installation : le raccourci sur le bureau n'est plus imposé. Au premier lancement, MilfTV vous demande si vous en voulez un, et vous pouvez l'ajouter ou le retirer à tout moment dans Paramètres › Données et à propos. Il est retiré à la désinstallation. Le raccourci du menu Démarrer est toujours créé.",
+              "Accueil : les rangées horizontales se font défiler plus facilement. Leur ascenseur a été redessiné aux couleurs de l'application (une poignée à la couleur d'accent, qui s'épaissit au survol) et reste toujours visible, des flèches apparaissent au survol pour avancer d'un écran, et vous pouvez faire glisser une rangée sur le côté avec la souris (clic gauche maintenu, même sur une affiche). Il en va de même pour Distribution et Dans la même catégorie sur les fiches.",
+              "Mini-lecteur : réglez le volume directement, avec un curseur à côté du bouton du son (et le pourcentage quand la place le permet), ou avec la molette de la souris sur le mini-lecteur.",
+              "Fiches des films et des séries : informations sur le média. Des pastilles sous le titre (4K, HDR, HEVC, 5.1, langues) et une section Informations sur le média : résolution, vidéo, audio, langues audio, sous-titres, durée, débit, format et langue originale. Votre fournisseur les indique, et la première lecture les complète (toutes les langues audio et les sous-titres). Pour les séries, chaque épisode a sa ligne technique et la fiche résume la saison.",
+              "Tous les ascenseurs de l'application adoptent le nouveau style : une piste discrète et une poignée à la couleur d'accent, qui s'épaissit au survol.",
+              "Aperçu au survol des affiches : il montre aussi les informations sur le média (résolution, HDR, codec, son, langues) et, pour les séries, la durée d'un épisode.",
+              "Lecture automatique : choisissez quand démarre le compte à rebours de l'épisode suivant (Paramètres › Lecture automatique) : à la fin de l'épisode, comme avant, ou avant la fin, pendant le générique, pour que l'épisode suivant commence dès la fin. Le compte à rebours peut maintenant durer jusqu'à 60 secondes.",
+              "Windows sur ARM : une version ARM64 native pour les PC à processeur Snapdragon et autres puces ARM, avec son propre programme d'installation et ses propres mises à jour automatiques."
+            ]
+          },
+          {
+            "title": "Sécurité",
+            "items": [
+              "Les adresses de flux des playlists et des portails sont désormais vérifiées : les partages réseau et les protocoles internes du moteur vidéo sont refusés. Une playlist malveillante ne peut plus faire envoyer par Windows l'empreinte du mot de passe de votre compte à un serveur inconnu.",
+              "Les certificats HTTPS des serveurs IPTV sont désormais vérifiés. Si votre fournisseur utilise un certificat non valide, cochez « Accepter un certificat non valide » dans les options avancées de la source (déconseillé).",
+              "Les identifiants, mots de passe et jetons sont masqués dans le journal : il peut être joint à un signalement de bug.",
+              "Le code parental est conservé sous forme d'empreinte salée, et les erreurs répétées de code ou de mot de passe de profil imposent désormais une attente croissante (de 5 secondes à 5 minutes).",
+              "Les playlists, catalogues ou guides TV démesurés sont refusés au lieu de saturer la mémoire.",
+              "Le lecteur de bandes-annonces refuse les téléchargements et les demandes d'accès à la caméra, au micro, à la position ou aux notifications.",
+              "Les outils de test ne sont plus inclus dans les versions publiées.",
+              "Avant une restauration, les serveurs des sources de la sauvegarde et, s'il y en a un, son dossier réseau d'enregistrement sont affichés."
+            ]
+          },
+          {
+            "title": "Corrections",
+            "items": [
+              "Le titre « Qui regarde ? » suit le changement de langue.",
+              "Dans Ma liste, « Marquer comme vu » ne faisait rien sur une série : tous ses épisodes sont maintenant marqués."
+            ]
+          }
+        ],
+        "es": [
+          {
+            "title": "Novedades",
+            "items": [
+              "En la lista de canales del reproductor, deja el ratón un momento sobre un canal para ver su ficha: el programa en curso (horario, progreso, tiempo restante, género, episodio, sinopsis e imagen cuando la guía los ofrece) y los siguientes programas. Sigue el ajuste «Vista previa al pasar el ratón» y su retardo, como las carátulas.",
+              "Series: marca de una vez toda una temporada o toda la serie como vista (o no vista) con los botones de la ficha de la serie. El menú contextual del cartel de una serie también ofrece «Marcar toda la serie como vista». El botón de reproducción empieza entonces por el primer episodio no visto.",
+              "Instalación: el acceso directo en el escritorio ya no es obligatorio. En el primer inicio, MilfTV te pregunta si quieres uno, y puedes añadirlo o quitarlo en cualquier momento en Ajustes › Datos y acerca de. Se elimina al desinstalar MilfTV. El acceso directo del menú Inicio se sigue creando.",
+              "Inicio: las filas horizontales se desplazan más fácilmente. Su barra de desplazamiento se ha rediseñado con los colores de la aplicación (un control del color de acento que se ensancha al pasar el ratón) y siempre está visible, aparecen flechas al pasar el ratón para avanzar una pantalla, y puedes arrastrar una fila hacia un lado con el ratón (botón izquierdo pulsado, incluso sobre un cartel). Lo mismo vale para Reparto y En la misma categoría en las fichas.",
+              "Minirreproductor: ajusta el volumen directamente, con un control deslizante junto al botón de sonido (y el porcentaje cuando hay sitio), o con la rueda del ratón sobre el minirreproductor.",
+              "Fichas de películas y series: información del medio. Etiquetas bajo el título (4K, HDR, HEVC, 5.1, idiomas) y una sección Información del medio: resolución, vídeo, audio, idiomas de audio, subtítulos, duración, tasa de bits, formato e idioma original. Tu proveedor la indica y la primera reproducción la completa (todos los idiomas de audio y los subtítulos). En las series, cada episodio tiene su línea técnica y la ficha resume la temporada.",
+              "Todas las barras de desplazamiento de la aplicación adoptan el nuevo estilo: una pista discreta y un control del color de acento que se ensancha al pasar el ratón.",
+              "Vista previa al pasar sobre los carteles: ahora muestra también la información del medio (resolución, HDR, códec, sonido, idiomas) y, en las series, la duración de un episodio.",
+              "Reproducción automática: elige cuándo empieza la cuenta atrás del siguiente episodio (Ajustes › Reproducción automática): al final del episodio, como antes, o antes del final, durante los créditos, para que el siguiente episodio empiece en cuanto acaba este. La cuenta atrás puede durar ahora hasta 60 segundos.",
+              "Windows en ARM: una versión ARM64 nativa para PC con procesadores Snapdragon y otros chips ARM, con su propio instalador y sus propias actualizaciones automáticas."
+            ]
+          },
+          {
+            "title": "Seguridad",
+            "items": [
+              "Ahora se comprueban las direcciones de flujo de las listas y los portales: se rechazan las carpetas de red y los protocolos internos del motor de vídeo. Una lista maliciosa ya no puede hacer que Windows envíe la huella de la contraseña de tu cuenta a un servidor desconocido.",
+              "Ahora se verifican los certificados HTTPS de los servidores IPTV. Si tu proveedor usa un certificado no válido, marca «Aceptar un certificado no válido» en las opciones avanzadas de la fuente (no recomendado).",
+              "Los usuarios, contraseñas y tokens se ocultan en el registro, así que puede adjuntarse a un informe de error.",
+              "El código parental se guarda como huella con sal, y los errores repetidos de código o de contraseña de perfil imponen ahora una espera creciente (de 5 segundos a 5 minutos).",
+              "Las listas, catálogos o guías de TV desmesurados se rechazan en lugar de saturar la memoria.",
+              "El reproductor de tráileres rechaza las descargas y las solicitudes de cámara, micrófono, ubicación o notificaciones.",
+              "Las herramientas de prueba ya no se incluyen en las versiones publicadas.",
+              "Antes de restaurar, se muestran los servidores de las fuentes de la copia y, si lo hay, su carpeta de red de grabaciones."
+            ]
+          },
+          {
+            "title": "Correcciones",
+            "items": [
+              "El título «¿Quién está viendo?» sigue el cambio de idioma.",
+              "En Mi lista, «Marcar como visto» no hacía nada en una serie: ahora marca todos sus episodios."
+            ]
+          }
+        ],
+        "de": [
+          {
+            "title": "Neu",
+            "items": [
+              "Bleiben Sie in der Senderliste des Players kurz mit der Maus auf einem Sender, um seine Übersicht zu sehen: die laufende Sendung (Uhrzeit, Fortschritt, Restzeit, Genre, Folge, Inhalt und Bild, wenn der Programmführer sie liefert) und die nächsten Sendungen. Sie folgt der Einstellung „Vorschau beim Überfahren“ und ihrer Verzögerung, wie bei den Postern.",
+              "Serien: Markieren Sie eine ganze Staffel oder die ganze Serie auf einmal als gesehen (oder nicht gesehen), mit den Schaltflächen auf der Serienseite. Das Kontextmenü eines Serienposters bietet außerdem „Ganze Serie als gesehen markieren“. Die Wiedergabe-Schaltfläche beginnt dann mit der ersten nicht gesehenen Folge.",
+              "Installation: Die Desktop-Verknüpfung wird nicht mehr erzwungen. Beim ersten Start fragt MilfTV, ob Sie eine möchten, und Sie können sie jederzeit unter Einstellungen › Daten und Info hinzufügen oder entfernen. Beim Deinstallieren wird sie entfernt. Die Verknüpfung im Startmenü wird weiterhin angelegt.",
+              "Startseite: Die horizontalen Reihen lassen sich leichter blättern. Ihre Bildlaufleiste wurde in den Farben der Anwendung neu gestaltet (ein Griff in der Akzentfarbe, der beim Überfahren breiter wird) und ist immer sichtbar, beim Überfahren erscheinen Pfeile, um eine Bildschirmbreite weiterzugehen, und Sie können eine Reihe mit der Maus seitlich ziehen (linke Taste gedrückt halten, auch auf einem Poster). Dasselbe gilt für Besetzung und In derselben Kategorie auf den Detailseiten.",
+              "Mini-Player: Stellen Sie die Lautstärke direkt ein, mit einem Schieberegler neben der Ton-Schaltfläche (und der Prozentangabe, wenn genug Platz ist) oder mit dem Mausrad über dem Mini-Player.",
+              "Film- und Serienseiten: Medieninformationen. Markierungen unter dem Titel (4K, HDR, HEVC, 5.1, Sprachen) und ein Abschnitt Medieninformationen: Auflösung, Video, Audio, Audiosprachen, Untertitel, Dauer, Bitrate, Format und Originalsprache. Ihr Anbieter liefert sie, und die erste Wiedergabe ergänzt sie (alle Audiosprachen und Untertitel). Bei Serien hat jede Folge ihre technische Zeile und die Seite fasst die Staffel zusammen.",
+              "Alle Bildlaufleisten der Anwendung haben den neuen Stil: eine dezente Spur und ein Griff in der Akzentfarbe, der beim Überfahren breiter wird.",
+              "Vorschau beim Überfahren der Poster: Sie zeigt jetzt auch die Medieninformationen (Auflösung, HDR, Codec, Ton, Sprachen) und bei Serien die Länge einer Folge.",
+              "Automatische Wiedergabe: Wählen Sie, wann der Countdown zur nächsten Folge beginnt (Einstellungen › Automatische Wiedergabe): am Ende der Folge, wie bisher, oder vor dem Ende, während des Abspanns, damit die nächste Folge direkt am Ende startet. Der Countdown kann jetzt bis zu 60 Sekunden dauern.",
+              "Windows on ARM: eine native ARM64-Version für PCs mit Snapdragon-Prozessoren und anderen ARM-Chips, mit eigenem Installationsprogramm und eigenen automatischen Updates."
+            ]
+          },
+          {
+            "title": "Sicherheit",
+            "items": [
+              "Stream-Adressen aus Playlists und Portalen werden jetzt geprüft: Netzwerkfreigaben und interne Protokolle der Video-Engine werden abgelehnt. Eine bösartige Playlist kann Windows nicht mehr dazu bringen, einen Hash Ihres Kontopassworts an einen unbekannten Server zu senden.",
+              "HTTPS-Zertifikate von IPTV-Servern werden jetzt überprüft. Verwendet Ihr Anbieter ein ungültiges Zertifikat, aktivieren Sie „Ungültiges Zertifikat akzeptieren“ in den erweiterten Optionen der Quelle (nicht empfohlen).",
+              "Benutzernamen, Passwörter und Tokens werden im Protokoll maskiert, sodass es einer Fehlermeldung beigefügt werden kann.",
+              "Die Jugendschutz-PIN wird als gesalzener Hash gespeichert, und wiederholte falsche PINs oder Profilpasswörter erzwingen jetzt eine zunehmende Wartezeit (von 5 Sekunden bis 5 Minuten).",
+              "Übergroße Playlists, Kataloge oder Programmführer werden abgelehnt, statt den Speicher zu füllen.",
+              "Der Trailer-Player lehnt Downloads sowie Zugriffe auf Kamera, Mikrofon, Standort oder Benachrichtigungen ab.",
+              "Testwerkzeuge sind in veröffentlichten Versionen nicht mehr enthalten.",
+              "Vor einer Wiederherstellung werden die Quellserver der Sicherung und gegebenenfalls ihr Netzwerkordner für Aufnahmen angezeigt."
+            ]
+          },
+          {
+            "title": "Korrekturen",
+            "items": [
+              "Der Titel „Wer schaut zu?“ folgt einem Sprachwechsel.",
+              "In Meine Liste bewirkte „Als gesehen markieren“ bei einer Serie nichts: Jetzt werden alle ihre Folgen markiert."
+            ]
+          }
+        ],
+        "it": [
+          {
+            "title": "Novità",
+            "items": [
+              "Nell'elenco dei canali del lettore, lascia il mouse un attimo su un canale per vederne la scheda: il programma in corso (orario, avanzamento, tempo restante, genere, episodio, trama e immagine quando la guida li fornisce) e i programmi successivi. Segue l'impostazione «Anteprima al passaggio» e il suo ritardo, come le locandine.",
+              "Serie: segna in un colpo solo un'intera stagione o tutta la serie come vista (o non vista), con i pulsanti della scheda della serie. Il menu contestuale della locandina di una serie offre anche «Segna tutta la serie come vista». Il pulsante di riproduzione riparte quindi dal primo episodio non visto.",
+              "Installazione: il collegamento sul desktop non è più imposto. Al primo avvio MilfTV ti chiede se ne vuoi uno, e puoi aggiungerlo o toglierlo in qualsiasi momento in Impostazioni › Dati e informazioni. Viene rimosso alla disinstallazione. Il collegamento nel menu Start viene sempre creato.",
+              "Home: le file orizzontali si scorrono più facilmente. La barra di scorrimento è stata ridisegnata con i colori dell'applicazione (una maniglia nel colore d'accento che si ingrossa al passaggio del mouse) ed è sempre visibile, al passaggio del mouse compaiono delle frecce per avanzare di una schermata, e puoi trascinare una fila di lato con il mouse (tasto sinistro premuto, anche su una locandina). Lo stesso vale per Cast e Nella stessa categoria nelle schede.",
+              "Mini lettore: regola il volume direttamente, con un cursore accanto al pulsante dell'audio (e la percentuale quando c'è spazio), oppure con la rotellina del mouse sul mini lettore.",
+              "Schede di film e serie: informazioni sul contenuto. Etichette sotto il titolo (4K, HDR, HEVC, 5.1, lingue) e una sezione Informazioni sul contenuto: risoluzione, video, audio, lingue audio, sottotitoli, durata, bitrate, formato e lingua originale. Le indica il tuo fornitore e la prima riproduzione le completa (tutte le lingue audio e i sottotitoli). Per le serie, ogni episodio ha la sua riga tecnica e la scheda riassume la stagione.",
+              "Tutte le barre di scorrimento dell'applicazione adottano il nuovo stile: una traccia discreta e una maniglia nel colore d'accento che si ingrossa al passaggio del mouse.",
+              "Anteprima al passaggio sulle locandine: mostra anche le informazioni sul contenuto (risoluzione, HDR, codec, audio, lingue) e, per le serie, la durata di un episodio.",
+              "Riproduzione automatica: scegli quando parte il conto alla rovescia dell'episodio successivo (Impostazioni › Riproduzione automatica): alla fine dell'episodio, come prima, o prima della fine, durante i titoli di coda, così l'episodio successivo inizia appena questo finisce. Il conto alla rovescia può ora durare fino a 60 secondi.",
+              "Windows su ARM: una versione ARM64 nativa per i PC con processori Snapdragon e altri chip ARM, con il proprio programma di installazione e i propri aggiornamenti automatici."
+            ]
+          },
+          {
+            "title": "Sicurezza",
+            "items": [
+              "Gli indirizzi dei flussi di playlist e portali vengono ora controllati: le cartelle di rete e i protocolli interni del motore video sono rifiutati. Una playlist malevola non può più far inviare da Windows l'impronta della password del tuo account a un server sconosciuto.",
+              "I certificati HTTPS dei server IPTV vengono ora verificati. Se il tuo fornitore usa un certificato non valido, seleziona «Accetta un certificato non valido» nelle opzioni avanzate della sorgente (sconsigliato).",
+              "Nomi utente, password e token sono mascherati nel log, che può quindi essere allegato a una segnalazione.",
+              "Il codice parentale è conservato come impronta con sale, e gli errori ripetuti di codice o di password del profilo impongono ora un'attesa crescente (da 5 secondi a 5 minuti).",
+              "Playlist, cataloghi o guide TV smisurati vengono rifiutati invece di saturare la memoria.",
+              "Il lettore dei trailer rifiuta i download e le richieste di fotocamera, microfono, posizione o notifiche.",
+              "Gli strumenti di test non sono più inclusi nelle versioni pubblicate.",
+              "Prima di un ripristino vengono mostrati i server delle sorgenti del backup e, se presente, la sua cartella di rete per le registrazioni."
+            ]
+          },
+          {
+            "title": "Correzioni",
+            "items": [
+              "Il titolo «Chi sta guardando?» segue il cambio di lingua.",
+              "In La mia lista, «Segna come visto» non faceva nulla su una serie: ora segna tutti i suoi episodi."
+            ]
+          }
+        ],
+        "pt": [
+          {
+            "title": "Novidades",
+            "items": [
+              "Na lista de canais do leitor, deixe o rato um momento sobre um canal para ver a sua ficha: o programa em curso (horário, progresso, tempo restante, género, episódio, sinopse e imagem quando o guia os fornece) e os programas seguintes. Segue a definição «Pré-visualização ao passar o rato» e o seu atraso, como os cartazes.",
+              "Séries: marque de uma só vez uma temporada inteira ou toda a série como vista (ou não vista), com os botões da ficha da série. O menu de contexto do cartaz de uma série também oferece «Marcar toda a série como vista». O botão de reprodução recomeça então no primeiro episódio não visto.",
+              "Instalação: o atalho no ambiente de trabalho deixou de ser imposto. No primeiro arranque, o MilfTV pergunta se quer um, e pode adicioná-lo ou removê-lo a qualquer momento em Definições › Dados e acerca de. É removido ao desinstalar o MilfTV. O atalho do menu Iniciar continua a ser criado.",
+              "Início: as filas horizontais deslocam-se com mais facilidade. A barra de deslocamento foi redesenhada com as cores da aplicação (uma pega na cor de destaque que engrossa ao passar o rato) e está sempre visível, aparecem setas ao passar o rato para avançar um ecrã, e pode arrastar uma fila para o lado com o rato (botão esquerdo premido, mesmo sobre um cartaz). O mesmo vale para Elenco e Na mesma categoria nas fichas.",
+              "Minileitor: ajuste o volume diretamente, com um cursor ao lado do botão de som (e a percentagem quando há espaço), ou com a roda do rato sobre o minileitor.",
+              "Fichas de filmes e séries: informações do conteúdo. Etiquetas sob o título (4K, HDR, HEVC, 5.1, idiomas) e uma secção Informações do conteúdo: resolução, vídeo, áudio, idiomas de áudio, legendas, duração, taxa de bits, formato e idioma original. O seu fornecedor indica-as e a primeira reprodução completa-as (todos os idiomas de áudio e as legendas). Nas séries, cada episódio tem a sua linha técnica e a ficha resume a temporada.",
+              "Todas as barras de deslocamento da aplicação adotam o novo estilo: uma pista discreta e uma pega na cor de destaque que engrossa ao passar o rato.",
+              "Pré-visualização ao passar sobre os cartazes: mostra também as informações do conteúdo (resolução, HDR, codec, som, idiomas) e, nas séries, a duração de um episódio.",
+              "Reprodução automática: escolha quando começa a contagem decrescente do episódio seguinte (Definições › Reprodução automática): no fim do episódio, como antes, ou antes do fim, durante o genérico, para que o episódio seguinte comece assim que este acaba. A contagem pode agora durar até 60 segundos.",
+              "Windows em ARM: uma versão ARM64 nativa para PC com processadores Snapdragon e outros chips ARM, com o seu próprio instalador e as suas próprias atualizações automáticas."
+            ]
+          },
+          {
+            "title": "Segurança",
+            "items": [
+              "Os endereços de fluxo das listas e portais passam a ser verificados: as partilhas de rede e os protocolos internos do motor de vídeo são recusados. Uma lista maliciosa já não consegue fazer o Windows enviar a impressão digital da palavra-passe da sua conta para um servidor desconhecido.",
+              "Os certificados HTTPS dos servidores IPTV passam a ser verificados. Se o seu fornecedor usar um certificado inválido, marque «Aceitar um certificado inválido» nas opções avançadas da fonte (não recomendado).",
+              "Os utilizadores, palavras-passe e tokens são ocultados no registo, que pode assim ser anexado a um relatório de erro.",
+              "O código parental é guardado como impressão digital com sal, e os erros repetidos de código ou de palavra-passe de perfil impõem agora uma espera crescente (de 5 segundos a 5 minutos).",
+              "Listas, catálogos ou guias de TV desmesurados são recusados em vez de saturarem a memória.",
+              "O leitor de trailers recusa transferências e pedidos de câmara, microfone, localização ou notificações.",
+              "As ferramentas de teste já não são incluídas nas versões publicadas.",
+              "Antes de um restauro, são mostrados os servidores das fontes da cópia e, se existir, a sua pasta de rede de gravações."
+            ]
+          },
+          {
+            "title": "Correções",
+            "items": [
+              "O título «Quem está a ver?» acompanha a mudança de idioma.",
+              "Em A minha lista, «Marcar como visto» não fazia nada numa série: agora marca todos os seus episódios."
+            ]
+          }
+        ]
+      }
+    },
     {
       "version": "1.0.0-beta.1",
       "date": "2026-11-23",

@@ -10,8 +10,16 @@ namespace MilfTV.ViewModels;
 public static class DevScript
 {
     /// <summary>Script présent ET données isolées : seule configuration où les tests peuvent s'exécuter.</summary>
+    /// <summary>Outils de test compilés dans cette version : oui pour le développement, non pour les versions publiées
+    /// (build/release.ps1 sans -DevTools) : rien ne peut alors être piloté par des variables d'environnement.</summary>
+#if DEVTOOLS
+    public static readonly bool ToolsCompiled = true;
+#else
+    public static readonly bool ToolsCompiled = false;
+#endif
+
     public static bool IsEnabled =>
-        AppPaths.DevRoot is not null && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MILFTV_DEV"));
+        ToolsCompiled && AppPaths.DevRoot is not null && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MILFTV_DEV"));
 
     public static void TryRun(MainViewModel main)
     {
@@ -95,6 +103,10 @@ public static class DevScript
                             if (hinput is null || hdev is null) break;
                             hinput((Avalonia.Input.Raw.RawInputEventArgs)hctor.Invoke(new object[] { hdev, (ulong)Environment.TickCount64, hwin,
                                 Avalonia.Input.Raw.RawPointerEventType.Move, hpt, Avalonia.Input.RawInputModifiers.None }));
+                            if (hxy.Length > 2 && hxy[2] == "click")
+                                foreach (var (btn, mods) in new[] { (Avalonia.Input.Raw.RawPointerEventType.LeftButtonDown, Avalonia.Input.RawInputModifiers.LeftMouseButton),
+                                                                   (Avalonia.Input.Raw.RawPointerEventType.LeftButtonUp, Avalonia.Input.RawInputModifiers.None) })
+                                    hinput((Avalonia.Input.Raw.RawInputEventArgs)hctor.Invoke(new object[] { hdev, (ulong)Environment.TickCount64, hwin, btn, hpt, mods }));
                             await Task.Delay(400);
                             var hov = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(hwin).OfType<Avalonia.Controls.Panel>().FirstOrDefault(p => p.Name == "Hud");
                             var ov = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(hwin).OfType<Avalonia.Controls.Control>().FirstOrDefault(p => p.Name == "MiniOverlay");
@@ -135,6 +147,7 @@ public static class DevScript
                     case "activity": main.Player.NotifyActivity(); break;
                     case "close": main.Player.Close(); break;
                     case "addsource": main.AddSource(arg); break;
+                    case "advanced": if (main.Dialog is SourceEditorViewModel sev) sev.ShowAdvanced = true; break;
                     case "dialogclose": main.CloseDialog(); break;
                     case "log":
                         var p = main.Player;
@@ -335,6 +348,23 @@ public static class DevScript
                             if (cmd == "markwatched") vbm.MarkWatchedCommand.Execute(target); else vbm.MarkUnwatchedCommand.Execute(target);
                         }
                         break;
+                    case "autoplaystart": Library.Instance.Prefs.AutoPlayCountdownStart = arg; Library.Instance.Prefs.AutoPlayCountdown = 8; break;
+                    case "cancelnext": main.Player.CancelNextEpisodeCommand.Execute(null); break;
+                    case "lognext":
+                        Log.Info($"DevScript suivant : épisode={main.Player.CurrentEpisode?.Code} suivant={main.Player.NextEpisode?.Code} décompte={main.Player.NextEpisodeCountdown} texte={main.Player.NextEpisodeText} position={main.Player.Engine.TimePos:0}/{main.Player.Engine.Duration:0} ouvert={main.Player.IsOpen}");
+                        break;
+                    case "markseason": if (main.CurrentPage is SeriesDetailViewModel msd) msd.ToggleSeasonWatchedCommand.Execute(null); break;
+                    case "markseries": if (main.CurrentPage is SeriesDetailViewModel msr) msr.ToggleSeriesWatchedCommand.Execute(null); break;
+                    case "season": if (main.CurrentPage is SeriesDetailViewModel sse) sse.SelectedSeason = sse.Seasons[int.Parse(arg)]; break;
+                    case "logseries":
+                        if (main.CurrentPage is SeriesDetailViewModel lsd)
+                            Log.Info($"DevScript série : {lsd.Series.Name} saisonVue={lsd.SeasonWatched} sérieVue={lsd.SeriesWatched} bouton={lsd.PlayLabel} " +
+                                     string.Join(" ", lsd.Seasons.Select(x => $"S{x.Number}:{x.Episodes.Count(e => e.IsWatched)}/{x.Episodes.Count}")));
+                        break;
+                    case "logshortcut":
+                        Log.Info($"DevScript raccourci : base={AppContext.BaseDirectory} exe={Environment.ProcessPath} installée={Core.DesktopShortcut.IsAvailable} nôtre={Core.DesktopShortcut.Exists} présent={Core.DesktopShortcut.AnyExists} proposé={Data.SettingsStore.Current.DesktopShortcutAsked} premier={Core.DesktopShortcut.FirstRunAfterInstall} dialogue={main.Dialog?.GetType().Name}");
+                        break;
+                    case "shortcutset": if (main.CurrentPage is SettingsViewModel ssc) ssc.DesktopShortcutOn = arg == "1"; break;
                     case "logvod":
                         if (main.CurrentPage is VodBrowserViewModel vbl)
                             Log.Info($"DevScript liste : {vbl.Title} filtre={vbl.SelectedWatchFilter.Key} éléments={vbl.Items.Count} vus={vbl.Items.Count(x => x is Movie mv ? mv.IsWatched : x.IsInProgress)} premiers=[{string.Join(", ", vbl.Items.Take(4).Select(x => x.Name + (x.IsWatched ? " ✓" : x.IsInProgress ? " …" : "")))}]");
@@ -368,6 +398,38 @@ public static class DevScript
                     case "updatecheck": await Core.Updates.CheckAsync(); break;
                     case "updatechannel": Core.Updates.SetChannel(arg == "beta"); break;
                     case "changelog": main.ShowChangelog(); break;
+                    case "logtest": Log.Info("DevScript message : " + arg); break;
+                    case "httptest":
+                        // Requête avec le client choisi pour cette adresse (strict, sauf source qui accepte un certificat non valide).
+                        try
+                        {
+                            using var hreq = Http.Request(arg);
+                            using var hresp = await Http.ForUrl(arg).SendAsync(hreq, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
+                            Log.Info($"DevScript réseau {arg} : HTTP {(int)hresp.StatusCode}");
+                        }
+                        catch (Exception hex) { Log.Info($"DevScript réseau {arg} : échec, certificat={Http.IsCertificateError(hex)}"); }
+                        break;
+                    case "allowcert":
+                        // allowcert=hôte : marque la source de ce serveur (ou en crée une factice) comme acceptant un certificat non valide.
+                        Data.SettingsStore.Current.Sources.Add(new SourceConfig { Name = "Test certificat", Kind = SourceKind.M3u, Url = "https://" + arg + "/x.m3u", AllowInvalidCertificate = true });
+                        break;
+                    case "logpin": Log.Info($"DevScript code : dialogue={main.Dialog?.GetType().Name} erreur={(main.Dialog as PinDialogViewModel)?.Error ?? (main.Dialog as PasswordDialogViewModel)?.Error} empreinte={Data.SettingsStore.Current.ParentalPinHash?.Split('$')[0]}"); break;
+                    case "logbackup":
+                        var bsum = (main.Dialog as BackupDialogViewModel)?.Summary ?? "";
+                        Log.Info("DevScript sauvegarde : " + bsum.Replace("\n", " | "));
+                        break;
+                    case "hoverpref": Library.Instance.Prefs.HoverPreview = arg == "1"; break;
+                    case "logtip":
+                    case "opentip":
+                        // État de l'infobulle (fiche de chaîne) des éléments de la liste du lecteur ; opentip=n l'ouvre de force.
+                        var tw = (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                        if (tw is null) break;
+                        var tipItems = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(tw).OfType<Avalonia.Controls.ListBoxItem>()
+                            .Where(x => x.DataContext is Core.LiveChannel && Avalonia.VisualTree.VisualExtensions.GetVisualAncestors(x).OfType<Avalonia.Controls.Control>().Any(a => a.Name == "ZapList")).ToList();
+                        if (cmd == "opentip") { Avalonia.Controls.ToolTip.SetIsOpen(tipItems[int.Parse(arg)], true); break; }
+                        foreach (var ti in tipItems.Take(4))
+                            Log.Info($"DevScript infobulle {((Core.LiveChannel)ti.DataContext!).Name} : fiche={Avalonia.Controls.ToolTip.GetTip(ti)?.GetType().Name} ouverte={Avalonia.Controls.ToolTip.GetIsOpen(ti)} transparence={(Avalonia.Controls.ToolTip.GetTip(ti) is Avalonia.Controls.Control tc ? Avalonia.Controls.TopLevel.GetTopLevel(tc)?.ActualTransparencyLevel.ToString() : null)} délai={Avalonia.Controls.ToolTip.GetShowDelay(ti)} survol={ti.IsPointerOver} actif={tw.IsActive}");
+                        break;
                     case "channelui":
                         // Comme le choix dans Paramètres (confirmation, puis sauvegarde automatique avant la bêta).
                         if (main.CurrentPage is SettingsViewModel chs) chs.UpdateChannelIndex = int.Parse(arg);
@@ -433,7 +495,8 @@ public static class DevScript
                     case "logmini":
                         var wmi = (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
                         var host = wmi is null ? null : Avalonia.Controls.ControlExtensions.FindControl<Avalonia.Controls.Border>(wmi, "PlayerHost");
-                        Log.Info($"DevScript mini : ouvert={main.Player.IsOpen} mini={main.Player.IsMini} appli={main.Player.ShowsApp} pause={main.Player.IsPaused} page={main.CurrentPage?.GetType().Name} largeur={Data.SettingsStore.Current.MiniPlayerWidth} x={Data.SettingsStore.Current.MiniPlayerX} y={Data.SettingsStore.Current.MiniPlayerY} cadre={host?.Bounds} plein={main.IsFullscreen}");
+                        var vslider = wmi is null ? null : Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(wmi).OfType<Avalonia.Controls.Slider>().FirstOrDefault(sl => sl.Name == "VolumeSlider");
+                        Log.Info($"DevScript mini : volume={main.Player.Volume:0} muet={main.Player.IsMuted} curseur={(vslider is null ? null : Avalonia.VisualExtensions.TranslatePoint(vslider, default, wmi!))}/{vslider?.Bounds.Size} ouvert={main.Player.IsOpen} mini={main.Player.IsMini} appli={main.Player.ShowsApp} pause={main.Player.IsPaused} page={main.CurrentPage?.GetType().Name} largeur={Data.SettingsStore.Current.MiniPlayerWidth} x={Data.SettingsStore.Current.MiniPlayerX} y={Data.SettingsStore.Current.MiniPlayerY} cadre={host?.Bounds} plein={main.IsFullscreen}");
                         break;
                     case "gesture":
                         // Rejoue un geste souris sur l'image du lecteur puis journalise l'état de lecture.
@@ -463,6 +526,37 @@ public static class DevScript
                     case "previewreport": Views.PosterPreviewController.Current?.DevReportVolume(); break;
                     case "trailer": await main.OpenTrailerAsync(c.Movies[int.Parse(arg)]); break;
                     case "dtrailer": if (main.CurrentPage is DetailViewModelBase dvm) await dvm.OpenTrailerCommand.ExecuteAsync(null); break;
+                    case "drag":
+                        // drag=x1,y1,x2,y2 : bouton gauche enfoncé en (x1,y1), glissé en 12 pas, relâché en (x2,y2).
+                        var dv = arg.Split(',').Select(v => double.Parse(v, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+                        RawMouse(Avalonia.Input.Raw.RawPointerEventType.Move, dv[0], dv[1], Avalonia.Input.RawInputModifiers.None);
+                        RawMouse(Avalonia.Input.Raw.RawPointerEventType.LeftButtonDown, dv[0], dv[1], Avalonia.Input.RawInputModifiers.LeftMouseButton);
+                        for (var k = 1; k <= 12; k++)
+                        {
+                            await Task.Delay(12);
+                            RawMouse(Avalonia.Input.Raw.RawPointerEventType.Move, dv[0] + (dv[2] - dv[0]) * k / 12, dv[1] + (dv[3] - dv[1]) * k / 12,
+                                Avalonia.Input.RawInputModifiers.LeftMouseButton);
+                        }
+                        RawMouse(Avalonia.Input.Raw.RawPointerEventType.LeftButtonUp, dv[2], dv[3], Avalonia.Input.RawInputModifiers.None);
+                        Log.Info($"DevScript glisser {arg} : page={main.CurrentPage?.GetType().Name}");
+                        break;
+                    case "wheel":
+                        // wheel=x,y,dy : un cran de molette (dy > 0 vers le haut) à la position donnée.
+                        var wv = arg.Split(',').Select(v => double.Parse(v, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+                        RawMouse(Avalonia.Input.Raw.RawPointerEventType.Move, wv[0], wv[1], Avalonia.Input.RawInputModifiers.None);
+                        RawWheel(wv[0], wv[1], wv[2]);
+                        break;
+                    case "lograils":
+                        var rw = (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                        if (rw is null) break;
+                        foreach (var rail in Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(rw).OfType<Controls.Rail>().Where(r => r.IsEffectivelyVisible).Take(int.TryParse(arg, out var rn) ? rn : 4))
+                        {
+                            var rsv = rail.Children.OfType<Avalonia.Controls.ScrollViewer>().First();
+                            var arrows = rail.Children.OfType<Avalonia.Controls.Button>().Select(b => (b.IsHitTestVisible ? "visible" : "cachée") + $"({b.Opacity:0.##}@{b.Bounds})");
+                            var bar = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(rsv).OfType<Avalonia.Controls.Primitives.ScrollBar>().FirstOrDefault(b => b.Orientation == Avalonia.Layout.Orientation.Horizontal);
+                            Log.Info($"DevScript rangée à {Avalonia.VisualExtensions.TranslatePoint(rail, default, rw)} taille={rail.Bounds.Size} décalage={rsv.Offset.X:0} sur {Math.Max(0, rsv.Extent.Width - rsv.Viewport.Width):0} survol={rail.IsPointerOver} flèches={string.Join("/", arrows)} ascenseur={bar?.Bounds.Height:0.#}px déployé={bar?.IsExpanded}");
+                        }
+                        break;
                     case "quit":
                         (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.Shutdown();
                         break;
@@ -473,5 +567,39 @@ public static class DevScript
                 Log.Error("DevScript " + raw, ex);
             }
         }
+    }
+
+    private static void RawWheel(double x, double y, double dy)
+    {
+        var win = (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        if (win?.PlatformImpl is not { } impl) return;
+        const System.Reflection.BindingFlags F = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+        var t = impl.GetType();
+        var inputProp = t.GetProperty("Input", F) ?? t.GetInterfaces().Select(i => i.GetProperty("Input", F)).FirstOrDefault(p => p is not null);
+        if (inputProp?.GetValue(impl) is not Action<Avalonia.Input.Raw.RawInputEventArgs> input) return;
+        object? device = null;
+        for (var tt = t; tt is not null && device is null; tt = tt.BaseType)
+            device = tt.GetFields(F).Where(fl => typeof(Avalonia.Input.IPointerDevice).IsAssignableFrom(fl.FieldType)).Select(fl => fl.GetValue(impl)).FirstOrDefault(v => v is Avalonia.Input.MouseDevice);
+        if (device is null) return;
+        var ctor = typeof(Avalonia.Input.Raw.RawMouseWheelEventArgs).GetConstructors(F).First(c => c.GetParameters().Length == 6);
+        input((Avalonia.Input.Raw.RawInputEventArgs)ctor.Invoke(new object[] { device, (ulong)Environment.TickCount64, win, new Avalonia.Point(x, y), new Avalonia.Vector(0, dy), Avalonia.Input.RawInputModifiers.None }));
+    }
+
+    /// <summary>Événement souris brut injecté dans la fenêtre (le vrai curseur ne bouge pas) : tests uniquement.</summary>
+    private static void RawMouse(Avalonia.Input.Raw.RawPointerEventType type, double x, double y, Avalonia.Input.RawInputModifiers mods)
+    {
+        var win = (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        if (win?.PlatformImpl is not { } impl) return;
+        const System.Reflection.BindingFlags F = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+        var t = impl.GetType();
+        var inputProp = t.GetProperty("Input", F) ?? t.GetInterfaces().Select(i => i.GetProperty("Input", F)).FirstOrDefault(p => p is not null);
+        if (inputProp?.GetValue(impl) is not Action<Avalonia.Input.Raw.RawInputEventArgs> input) return;
+        object? device = null;
+        for (var tt = t; tt is not null && device is null; tt = tt.BaseType)
+            device = tt.GetFields(F).Where(fl => typeof(Avalonia.Input.IPointerDevice).IsAssignableFrom(fl.FieldType)).Select(fl => fl.GetValue(impl)).FirstOrDefault(v => v is Avalonia.Input.MouseDevice);
+        if (device is null) return;
+        var ctor = typeof(Avalonia.Input.Raw.RawPointerEventArgs).GetConstructors(F)
+            .First(c => c.GetParameters().Length == 6 && c.GetParameters()[4].ParameterType == typeof(Avalonia.Point));
+        input((Avalonia.Input.Raw.RawInputEventArgs)ctor.Invoke(new object[] { device, (ulong)Environment.TickCount64, win, type, new Avalonia.Point(x, y), mods }));
     }
 }

@@ -14,7 +14,7 @@ body:
     attributes:
       label: MilfTV version / Version de MilfTV
       description: Settings › Data and about (bottom of the page). / Paramètres › Données et à propos (en bas de la page).
-      placeholder: 1.0.0-beta.1
+      placeholder: 1.0.0-beta.2
     validations:
       required: true
   - type: dropdown
@@ -23,6 +23,7 @@ body:
       label: Installation
       options:
         - Installer / Programme d'installation (Setup.exe)
+        - Installer for Windows on ARM / Programme d'installation pour Windows sur ARM (arm64-Setup.exe)
         - Portable version / Version portable (zip)
         - Built from source / Compilé depuis les sources
     validations:

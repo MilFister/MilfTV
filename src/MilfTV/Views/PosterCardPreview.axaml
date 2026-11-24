@@ -36,6 +36,17 @@
         </Grid>
         <TextBlock Text="{Binding MetaLine}" Classes="muted" FontSize="12.5" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
                    IsVisible="{Binding MetaLine, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <!-- Informations sur le média : définition, HDR, codec, son, langues -->
+        <ItemsControl ItemsSource="{Binding MediaChips}" IsVisible="{Binding HasMediaChips}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel ItemSpacing="6" LineSpacing="6" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="x:String">
+              <Border Classes="mediaChip small"><TextBlock Text="{Binding}" /></Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
         <TextBlock Text="{Binding Plot}" FontSize="13" LineHeight="19" TextWrapping="Wrap" MaxLines="4" TextTrimming="CharacterEllipsis"
                    Foreground="{DynamicResource TextSecondary}" IsVisible="{Binding HasPlot}" />
 

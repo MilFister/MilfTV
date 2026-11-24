@@ -128,9 +128,11 @@ public sealed partial class FavoritesViewModel : ViewModelBase
         _main.OnWatchChanged();
     }
 
+    /// <summary>Menu de l'affiche : film vu, ou tous les épisodes d'une série.</summary>
     [RelayCommand]
-    private void MarkWatched(CatalogItem item)
+    private async Task MarkWatchedAsync(CatalogItem item)
     {
+        if (item is Series s) { await _main.MarkSeriesWatchedAsync(s); return; }
         if (item is not Movie m) return;
         var w = Lib.GetWatch(m.Key);
         Lib.SaveWatch(new WatchEntry

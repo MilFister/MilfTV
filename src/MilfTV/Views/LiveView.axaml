@@ -93,7 +93,8 @@
     <!-- ── Fiche de la chaîne ── -->
     <Border x:Name="InfoPanel" Grid.Column="2" Classes="panel" Padding="22">
       <Panel>
-        <ScrollViewer IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <!-- Marge à droite : l'ascenseur, toujours affiché, ne recouvre pas les boutons d'enregistrement -->
+        <ScrollViewer IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNotNull}}" Padding="0,0,16,0">
           <StackPanel Spacing="18">
             <Grid ColumnDefinitions="Auto,*">
               <Border Width="104" Height="74" CornerRadius="14" Background="{DynamicResource Placeholder}" ClipToBounds="True">

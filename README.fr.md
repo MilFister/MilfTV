@@ -87,11 +87,13 @@ Téléchargez la dernière version depuis la page [Releases](https://github.com/
 
 | Fichier | Ce que c'est |
 |---|---|
-| `MilfTV.App-beta-Setup.exe` | **Programme d'installation (recommandé).** Installe MilfTV pour votre compte Windows, sans droits administrateur, avec raccourcis sur le bureau et dans le menu Démarrer, et mises à jour automatiques. |
+| `MilfTV.App-beta-Setup.exe` | **Programme d'installation (recommandé).** Installe MilfTV pour votre compte Windows, sans droits administrateur, avec un raccourci dans le menu Démarrer et les mises à jour automatiques ; un raccourci sur le bureau est proposé au premier lancement. |
 | `MilfTV.App-beta-Portable.zip` | **Version portable.** Décompressez-la où vous voulez et lancez `MilfTV.exe` ; rien n'est installé. |
+| `MilfTV.App-beta-arm64-Setup.exe` | **Programme d'installation pour Windows sur ARM** (PC ARM64, par ex. Snapdragon). Comme ci-dessus, en version ARM64 native. |
+| `MilfTV.App-beta-arm64-Portable.zip` | **Version portable pour Windows sur ARM.** |
 
 **Configuration requise**
-- Windows 10 ou 11, 64 bits.
+- Windows 10 ou 11, sur un PC 64 bits (Intel / AMD) ou un PC Windows sur ARM (ARM64).
 - Une carte graphique compatible Direct3D 11 avec un pilote à jour.
 - Le runtime WebView2 (inclus dans Windows 10/11) pour les bandes-annonces.
 
@@ -136,6 +138,8 @@ MilfTV n'a **ni compte, ni publicité, ni télémétrie**. Il se connecte unique
 
 Les mots de passe des sources et la clé TMDB sont chiffrés avec votre compte Windows (DPAPI) ; les mots de passe des profils et le code parental ne sont conservés que sous forme d'empreintes.
 
+Le contrôle parental tient les enfants à l'écart des contenus adultes et des réglages protégés, mais une personne qui utilise votre session Windows peut toujours modifier le fichier des réglages. Pour une vraie séparation, donnez à chaque enfant son propre compte Windows.
+
 **Sauvegarde et restauration** (Paramètres › Données et à propos) enregistre vos profils, sources, réglages, historique, Ma liste, favoris et liste des enregistrements dans un fichier `.milftv-backup`. Les vidéos enregistrées, le guide TV et les caches n'en font pas partie. Ajoutez un mot de passe de sauvegarde pour restaurer les mots de passe des sources sur un autre PC.
 
 ## Raccourcis clavier
@@ -160,6 +164,7 @@ Les mots de passe des sources et la clé TMDB sont chiffrés avec votre compte W
 
 - **Du son mais pas d'image** (machine virtuelle, bureau à distance, pilote très ancien) : MilfTV a besoin de l'accélération graphique Direct3D 11. Mettez à jour le pilote de votre carte graphique.
 - **La fenêtre ne s'affiche pas** : MilfTV repasse de lui-même en mode d'affichage compatible au démarrage suivant. Vous pouvez aussi le lancer avec `MilfTV.exe --safe-mode`.
+- **« Le certificat de sécurité du serveur n'est pas valide »** : votre fournisseur utilise un certificat HTTPS non valide. Si vous lui faites confiance, cochez « Accepter un certificat non valide » dans les options avancées de la source ; sur un réseau public, la connexion à ce serveur pourrait alors être interceptée.
 - **Une chaîne ne se lance pas** : vérifiez-la dans un autre lecteur ; MilfTV relance automatiquement les directs jusqu'à 5 fois en 2 minutes.
 - **Journaux** : Paramètres › Données et à propos › Ouvrir le dossier des journaux. Joignez le dernier journal à votre signalement après l'avoir parcouru : il peut mentionner l'adresse de votre serveur.
 
@@ -167,7 +172,7 @@ Les mots de passe des sources et la clé TMDB sont chiffrés avec votre compte W
 
 Prérequis : Windows, le [SDK .NET 10](https://dotnet.microsoft.com/download) et le runtime WebView2.
 
-1. Téléchargez une version de **libmpv** (`mpv-dev-x86_64-*.7z` sur [shinchiro/mpv-winbuild-cmake](https://github.com/shinchiro/mpv-winbuild-cmake/releases)) et copiez `libmpv-2.dll` dans `native/`. Avec environ 120 Mo, elle est trop volumineuse pour le dépôt. `native/vulkan-1.dll` (chargeur Vulkan de Khronos) y est déjà.
+1. Téléchargez une version de **libmpv** (`mpv-dev-x86_64-*.7z` sur [shinchiro/mpv-winbuild-cmake](https://github.com/shinchiro/mpv-winbuild-cmake/releases)) et copiez `libmpv-2.dll` dans `native/`. Avec environ 120 Mo, elle est trop volumineuse pour le dépôt. `native/vulkan-1.dll` (chargeur Vulkan de Khronos) y est déjà. Pour la version **ARM64** (PC Windows sur ARM), placez la `libmpv-2.dll` de `mpv-dev-aarch64-*.7z` dans `native/arm64/` (son chargeur Vulkan ARM64 y est déjà) et lancez `release.ps1` avec `-Arch arm64` : elle a ses propres canaux de mise à jour.
 2. Compilez et lancez :
 
 ```powershell
@@ -177,7 +182,7 @@ dotnet build src/MilfTV -c Debug
 3. Version de publication avec le programme d'installation (Velopack, restauré par `dotnet tool restore`) :
 
 ```powershell
-.\build\release.ps1 -UpdateRepo https://github.com/MilFister/MilfTV -Version 1.0.0-beta.1 -Channel beta
+.\build\release.ps1 -UpdateRepo https://github.com/MilFister/MilfTV -Version 1.0.0-beta.2 -Channel beta
 ```
 
 `build\release.ps1` publie un exécutable unique, construit le programme d'installation, la version portable et les paquets de mise à jour dans `artifacts\releases`, joint les notes de version, et peut publier sur GitHub (`-Upload`, avec `$env:GITHUB_TOKEN`) ou signer les fichiers (`-SignParams`, `-AzureSignFile`). `build\changelog.ps1` régénère les fichiers `CHANGELOG` à partir de `src/MilfTV/Assets/changelog.json`, que l'application affiche aussi.

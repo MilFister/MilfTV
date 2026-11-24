@@ -300,10 +300,23 @@ public sealed partial class PasswordDialogViewModel : ViewModelBase
     [RelayCommand]
     private void Confirm()
     {
-        if (Secret.VerifyPassword(Password, _profile.PasswordHash)) _done(true);
+        var key = "profile:" + _profile.Id;
+        if (AttemptGuard.Remaining(key) is { TotalSeconds: > 0 } wait)
+        {
+            Error = Loc.T("Pin.TooManyAttempts", (int)Math.Ceiling(wait.TotalSeconds));
+            Password = "";
+            return;
+        }
+        if (Secret.VerifyPassword(Password, _profile.PasswordHash))
+        {
+            AttemptGuard.Succeeded(key);
+            _done(true);
+        }
         else
         {
-            Error = Loc.T("Profile.PasswordWrong");
+            AttemptGuard.Failed(key);
+            var next = AttemptGuard.Remaining(key);
+            Error = next.TotalSeconds > 0 ? Loc.T("Pin.TooManyAttempts", (int)Math.Ceiling(next.TotalSeconds)) : Loc.T("Profile.PasswordWrong");
             Password = "";
         }
     }

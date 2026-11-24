@@ -3,8 +3,9 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <Platforms>x64</Platforms>
+    <!-- x64 par défaut ; « dotnet publish -r win-arm64 » (build\release.ps1 -Arch arm64) produit la version ARM64. -->
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <Platforms>x64;ARM64</Platforms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -16,13 +17,17 @@
     <AssemblyName>MilfTV</AssemblyName>
     <RootNamespace>MilfTV</RootNamespace>
     <Product>MilfTV</Product>
-    <Version>1.0.0-beta.1</Version>
+    <Version>1.0.0-beta.2</Version>
     <SelfContained>true</SelfContained>
     <SatelliteResourceLanguages>fr;en</SatelliteResourceLanguages>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
     <!-- Dépôt des versions pour les mises à jour automatiques (ex. https://github.com/compte/MilfTV).
          Vide = pas de mise à jour automatique. build\release.ps1 -UpdateRepo le renseigne aussi. -->
     <UpdateRepo Condition="'$(UpdateRepo)' == ''"></UpdateRepo>
+    <!-- Outils de test (scénarios MILFTV_DEV, sources de test) : présents en développement ; build\release.ps1 les
+         retire des versions publiées (-p:DevTools=false), sauf avec -DevTools pour tester une publication. -->
+    <DevTools Condition="'$(DevTools)' == ''">true</DevTools>
+    <DefineConstants Condition="'$(DevTools)' == 'true'">$(DefineConstants);DEVTOOLS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,9 +44,16 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
-    <None Include="..\..\native\libmpv-2.dll" Link="libmpv-2.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <!-- Chargeur Vulkan (Khronos, Apache-2.0) : libmpv en a besoin pour démarrer ; utilisé seulement si Windows n'en a pas. -->
-    <None Include="..\..\native\vulkan-1.dll" Link="vulkan-1.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Bibliothèques natives de l'architecture visée : native\ (x64) ou native\arm64\ (ARM64).
+         Chargeur Vulkan (Khronos, Apache-2.0) : libmpv en a besoin pour démarrer ; utilisé seulement si Windows n'en a pas. -->
+    <None Include="..\..\native\libmpv-2.dll" Link="libmpv-2.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+          Condition="'$(RuntimeIdentifier)' != 'win-arm64'" />
+    <None Include="..\..\native\vulkan-1.dll" Link="vulkan-1.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+          Condition="'$(RuntimeIdentifier)' != 'win-arm64'" />
+    <None Include="..\..\native\arm64\libmpv-2.dll" Link="libmpv-2.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+          Condition="'$(RuntimeIdentifier)' == 'win-arm64'" />
+    <None Include="..\..\native\arm64\vulkan-1.dll" Link="vulkan-1.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"
+          Condition="'$(RuntimeIdentifier)' == 'win-arm64'" />
     <!-- Licences des composants : à côté de l'exécutable (hors fichier unique) pour rester lisibles après installation. -->
     <None Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\..\licenses\*.txt" Link="licenses\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />

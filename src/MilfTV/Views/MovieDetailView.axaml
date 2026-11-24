@@ -62,6 +62,16 @@
               <TextBlock Text="{Binding MetaLine}" Classes="muted" VerticalAlignment="Center" Margin="0,0,14,6" />
               <TextBlock Text="{Binding Genres}" Classes="muted" VerticalAlignment="Center" Margin="0,0,0,6" />
             </WrapPanel>
+            <ItemsControl ItemsSource="{Binding MediaChips}" IsVisible="{Binding HasMediaChips}" Margin="0,-6,0,0">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel ItemSpacing="8" LineSpacing="6" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <Border Classes="mediaChip"><TextBlock Text="{Binding}" /></Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
             <TextBlock Text="{Binding Tagline}" FontStyle="Italic" Classes="muted" FontSize="15" IsVisible="{Binding Tagline, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
             <WrapPanel Orientation="Horizontal" Margin="0,4,0,0">
@@ -103,10 +113,32 @@
           </StackPanel>
         </Grid>
 
+        <!-- Informations sur le média (fournisseur, relevé de la dernière lecture, TMDB) -->
+        <StackPanel IsVisible="{Binding HasMediaRows}" Spacing="12">
+          <TextBlock Classes="h2" Text="{Binding MediaTitle}" />
+          <ItemsControl ItemsSource="{Binding MediaRows}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><WrapPanel ItemSpacing="12" LineSpacing="12" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:MediaRow">
+                <Border Classes="mediaTile">
+                  <StackPanel Spacing="3">
+                    <TextBlock Classes="caption" Text="{Binding Label}" />
+                    <TextBlock Text="{Binding Value}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" MaxWidth="320" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Classes="faint" FontSize="12.5" Text="{Binding MediaNote}" TextWrapping="Wrap"
+                     IsVisible="{Binding MediaNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+
         <!-- Distribution -->
         <StackPanel IsVisible="{Binding HasCast}" Spacing="12">
           <TextBlock Classes="h2" Text="{l:Tr Ui.Distribution}" />
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
+          <ctl:Rail ScrollPadding="0,0,0,12">
             <ItemsControl ItemsSource="{Binding Cast}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -126,13 +158,13 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-          </ScrollViewer>
+          </ctl:Rail>
         </StackPanel>
 
         <!-- Même catégorie -->
         <StackPanel IsVisible="{Binding HasSimilar}" Spacing="12">
           <TextBlock Classes="h2" Text="{l:Tr Ui.DansLaMemeCategorie}" />
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="6,6,6,12" Margin="-6,0">
+          <ctl:Rail ScrollPadding="6,6,6,12" Margin="-6,0">
             <ItemsControl ItemsSource="{Binding Similar}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -145,7 +177,7 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-          </ScrollViewer>
+          </ctl:Rail>
         </StackPanel>
       </StackPanel>
     </ScrollViewer>

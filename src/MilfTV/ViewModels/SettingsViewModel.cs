@@ -73,6 +73,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         _suggestionsFromHistory = Prefs.SuggestionsFromHistory;
         _autoPlayNext = Prefs.AutoPlayNext;
         _autoPlayCountdown = Prefs.AutoPlayCountdown;
+        _autoPlayStart = AutoPlayStartChoices.FirstOrDefault(o => o.Key == Prefs.AutoPlayCountdownStart) ?? AutoPlayStartChoices[0];
         _autoPlayMaxEpisodes = AutoPlayMaxChoices.FirstOrDefault(o => o.Value == Prefs.AutoPlayMaxEpisodes) ?? AutoPlayMaxChoices[0];
         _hoverPreview = Prefs.HoverPreview;
         _hoverDelaySeconds = Prefs.HoverDelayMs / 1000.0;
@@ -206,7 +207,7 @@ public sealed partial class SettingsViewModel : ViewModelBase
         ProfileSections.Add(E("appearance", "", Loc.T("Settings.Language") + " " + Loc.T("Ui.Mode") + " " + Loc.T("Ui.Couleur") + " " + Loc.T("Ui.TailleDesAffiches")));
         ProfileSections.Add(E("home", "", Loc.T("Ui.ReprendreLaLecture") + " " + Loc.T("Home.Recommended") + " " + Loc.T("Home.MyList")));
         ProfileSections.Add(E("history", "", Loc.T("Settings.TrackHistory") + " " + Loc.T("Settings.Resume")));
-        ProfileSections.Add(E("autoplay", "", Loc.T("Settings.AutoPlayNext") + " " + Loc.T("Settings.AutoPlayCountdown")));
+        ProfileSections.Add(E("autoplay", "", Loc.T("Settings.AutoPlayNext") + " " + Loc.T("Settings.AutoPlayCountdown") + " " + Loc.T("Settings.AutoPlayStart")));
         ProfileSections.Add(E("previews", "", Loc.T("Settings.TrailerLanguage") + " " + Loc.T("Settings.HoverPreview")));
         AppSections.Add(E("sources", "", "Xtream M3U MAC Stalker"));
         AppSections.Add(E("playback", "", Loc.T("Settings.MiniGroup") + " pip " + Loc.T("Ui.DirectDiffere") + " " + Loc.T("Settings.AudioOutput") + " " + Loc.T("Ui.DecodageMateriel") + " " + Loc.T("Ui.LanguesDesSousTitres")));
@@ -449,8 +450,16 @@ public sealed partial class SettingsViewModel : ViewModelBase
         new IntOption(10, Loc.T("Settings.Episodes", 10)),
     };
 
+    public IReadOnlyList<Option> AutoPlayStartChoices { get; } = new[]
+    {
+        new Option("end", Loc.T("Settings.AutoPlayStartEnd")),
+        new Option("before", Loc.T("Settings.AutoPlayStartBefore")),
+    };
+
     [ObservableProperty] private bool _autoPlayNext;
     [ObservableProperty] private int _autoPlayCountdown;
+    [ObservableProperty] private Option _autoPlayStart;
+    partial void OnAutoPlayStartChanged(Option value) => SetPref(p => p.AutoPlayCountdownStart = value.Key, notify: false);
     [ObservableProperty] private IntOption _autoPlayMaxEpisodes;
 
     partial void OnAutoPlayNextChanged(bool value) => SetPref(p => p.AutoPlayNext = value, notify: false);
@@ -576,6 +585,25 @@ public sealed partial class SettingsViewModel : ViewModelBase
     {
         if (_loading) return;
         S.AutoUpdate = value;
+        Save();
+    }
+
+    // Raccourci du bureau (copie installée) : état relu à l'ouverture de la page.
+    public bool CanDesktopShortcut => DesktopShortcut.IsAvailable;
+    [ObservableProperty] private bool _desktopShortcutOn = DesktopShortcut.Exists;
+    partial void OnDesktopShortcutOnChanged(bool value)
+    {
+        if (_loading) return;
+        var ok = value ? DesktopShortcut.Create() : DesktopShortcut.Remove();
+        if (!ok)
+        {
+            _main.Toast(Loc.T("Shortcut.Failed"), error: true);
+            _loading = true;
+            DesktopShortcutOn = !value;
+            _loading = false;
+            return;
+        }
+        S.DesktopShortcutAsked = true;
         Save();
     }
 

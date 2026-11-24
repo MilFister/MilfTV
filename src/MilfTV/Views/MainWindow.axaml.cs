@@ -52,6 +52,7 @@ public partial class MainWindow : Window
                 else if (Core.Backup.RestoreError is { } err)
                     main.Toast(Localization.Loc.T("Backup.RestoreFailed"), err, true);
                 main.AnnounceUpdateIfNeeded();
+                main.OfferDesktopShortcutIfNeeded();
             }
         }, TimeSpan.FromSeconds(3));
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);

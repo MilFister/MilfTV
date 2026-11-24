@@ -10,6 +10,111 @@
     <CornerRadius x:Key="ControlCornerRadius">10</CornerRadius>
     <CornerRadius x:Key="OverlayCornerRadius">14</CornerRadius>
     <x:Double x:Key="ScrollBarSize">10</x:Double>
+
+    <!-- Ascenseurs de toute l'application (vertical et horizontal) : 16 px de zone de prise, piste fine et
+         poignée « pilule » à la couleur d'accent, qui s'épaississent au survol. Pas de flèches aux extrémités
+         (les rangées horizontales ont leurs propres flèches, Controls/Rail). Appliqué par le style « ScrollBar ». -->
+    <ControlTheme x:Key="AppScrollThumb" TargetType="Thumb">
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <ThicknessTransition Property="Padding" Duration="0:0:0.12" />
+        </Transitions>
+      </Setter>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="Transparent">
+            <Border Margin="{TemplateBinding Padding}" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover">
+        <Setter Property="Background" Value="{DynamicResource AccentHover}" />
+      </Style>
+      <Style Selector="^:pressed">
+        <Setter Property="Background" Value="{DynamicResource AccentPressed}" />
+      </Style>
+    </ControlTheme>
+    <ControlTheme x:Key="AppScrollPage" TargetType="RepeatButton">
+      <Setter Property="Focusable" Value="False" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="Transparent" />
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="AppScrollBar" TargetType="ScrollBar">
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Panel Background="Transparent">
+            <Border Name="AppTrack" CornerRadius="4" Background="{DynamicResource BorderSubtle}">
+              <Border.Transitions>
+                <Transitions>
+                  <ThicknessTransition Property="Margin" Duration="0:0:0.12" />
+                </Transitions>
+              </Border.Transitions>
+            </Border>
+            <Track Name="PART_Track" Orientation="{TemplateBinding Orientation}"
+                   Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                   Value="{TemplateBinding Value, Mode=TwoWay}" ViewportSize="{TemplateBinding ViewportSize}"
+                   DeferThumbDrag="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}">
+              <Track.DecreaseButton>
+                <RepeatButton Name="PART_PageUpButton" Theme="{StaticResource AppScrollPage}" />
+              </Track.DecreaseButton>
+              <Track.IncreaseButton>
+                <RepeatButton Name="PART_PageDownButton" Theme="{StaticResource AppScrollPage}" />
+              </Track.IncreaseButton>
+              <Thumb Name="AppThumb" Theme="{StaticResource AppScrollThumb}" />
+            </Track>
+          </Panel>
+        </ControlTemplate>
+      </Setter>
+      <!-- Horizontal -->
+      <Style Selector="^:horizontal">
+        <Setter Property="Height" Value="16" />
+      </Style>
+      <Style Selector="^:horizontal /template/ Border#AppTrack">
+        <Setter Property="Margin" Value="0,6" />
+      </Style>
+      <Style Selector="^:horizontal /template/ Thumb#AppThumb">
+        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="MinWidth" Value="48" />
+      </Style>
+      <Style Selector="^:horizontal:pointerover /template/ Border#AppTrack">
+        <Setter Property="Margin" Value="0,4" />
+      </Style>
+      <Style Selector="^:horizontal:pointerover /template/ Thumb#AppThumb">
+        <Setter Property="Padding" Value="0,2" />
+      </Style>
+      <!-- Vertical -->
+      <!-- Vertical : zone de prise de 12 px (posée sur le bord droit du contenu, elle en couvre moins) -->
+      <Style Selector="^:vertical">
+        <Setter Property="Width" Value="12" />
+      </Style>
+      <!-- Valeur croissante vers le bas, comme le thème Fluent -->
+      <Style Selector="^:vertical /template/ Track#PART_Track">
+        <Setter Property="IsDirectionReversed" Value="True" />
+      </Style>
+      <Style Selector="^:vertical /template/ Border#AppTrack">
+        <Setter Property="Margin" Value="4,0" />
+      </Style>
+      <Style Selector="^:vertical /template/ Thumb#AppThumb">
+        <Setter Property="Padding" Value="3,0" />
+        <Setter Property="MinHeight" Value="48" />
+      </Style>
+      <Style Selector="^:vertical:pointerover /template/ Border#AppTrack">
+        <Setter Property="Margin" Value="3,0" />
+      </Style>
+      <Style Selector="^:vertical:pointerover /template/ Thumb#AppThumb">
+        <Setter Property="Padding" Value="1,0" />
+      </Style>
+      <Style Selector="^:pointerover /template/ Border#AppTrack">
+        <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+      </Style>
+    </ControlTheme>
   </Styles.Resources>
 
   <!-- ───────── Typographie ───────── -->
@@ -238,6 +343,57 @@
   <Style Selector="Button.icon:disabled">
     <Setter Property="Opacity" Value="0.28" />
   </Style>
+
+  <!-- Fiches : pastilles techniques (4K, HDR, 5.1…) et cases « Informations sur le média » -->
+  <Style Selector="Border.mediaChip">
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="8,3" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderStrong}" />
+    <Setter Property="Background" Value="{DynamicResource Surface}" />
+  </Style>
+  <Style Selector="Border.mediaChip TextBlock">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+  </Style>
+  <Style Selector="Border.mediaChip.small">
+    <Setter Property="Padding" Value="6,2" />
+  </Style>
+  <Style Selector="Border.mediaChip.small TextBlock">
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+  <Style Selector="Border.mediaTile">
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="14,10" />
+    <Setter Property="MinWidth" Value="170" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtle}" />
+    <Setter Property="Background" Value="{DynamicResource Surface}" />
+  </Style>
+
+  <!-- Flèches des rangées horizontales (Controls/Rail) : par-dessus les affiches, lisibles dans les deux thèmes -->
+  <Style Selector="Button.railArrow">
+    <Setter Property="Width" Value="46" />
+    <Setter Property="Height" Value="46" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="23" />
+    <Setter Property="Background" Value="#D9141418" />
+    <Setter Property="BorderBrush" Value="#40FFFFFF" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.railArrow:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource OnAccent}" />
+  </Style>
+  <Style Selector="Button.railArrow:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentPressed}" />
+  </Style>
   <Style Selector="Button.icon:disabled /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="Transparent" />
   </Style>
@@ -450,6 +606,10 @@
 
   <Style Selector="ScrollViewer">
     <Setter Property="AllowAutoHide" Value="True" />
+  </Style>
+  <!-- Tous les ascenseurs : thème AppScrollBar (voir les ressources en tête de fichier). -->
+  <Style Selector="ScrollBar">
+    <Setter Property="Theme" Value="{StaticResource AppScrollBar}" />
   </Style>
 
   <!-- Survol des cartes d'affiche -->

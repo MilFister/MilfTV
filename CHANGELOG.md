@@ -4,6 +4,41 @@
 
 All notable changes to MilfTV, newest first.
 
+## 1.0.0-beta.2
+
+*Released on 2026-11-24*
+
+Security update following a full audit of the application, with new features: media information on detail pages and previews, programme sheet when hovering channels, whole season or series marked as watched in one go, an optional desktop shortcut, and a native version for Windows on ARM PCs. Updating is recommended for everyone.
+
+### New
+
+- In the player's channel list, leave the mouse on a channel for a moment to see its programme sheet: what is on now (times, progress, time left, genre, episode, synopsis and picture when the guide provides them) and the next programmes. It follows the "Hover preview" setting and its delay, like the posters.
+- Series: mark a whole season or the whole series as watched (or unwatched) in one go, with the buttons on the series page. The right-click menu of a series poster also offers "Mark the whole series as watched". The play button then starts from the first unwatched episode.
+- Installation: the desktop shortcut is no longer forced. On first launch, MilfTV asks whether you want one, and you can add or remove it at any time in Settings › Data and about. It is removed when MilfTV is uninstalled. The Start menu shortcut is still created.
+- Home: the horizontal rows are easier to scroll. Their scroll bar has been redesigned in the app's colours (a handle in the accent colour that thickens on hover) and is always shown, arrows appear on hover to move one screen at a time, and you can drag a row sideways with the mouse (hold the left button, even on a poster). The same goes for Cast and In the same category on the detail pages.
+- Mini player: set the volume right there, with a slider next to the sound button (and the percentage when there is room), or with the mouse wheel over the mini player.
+- Movie and series pages: media information. Badges under the title (4K, HDR, HEVC, 5.1, languages) and a Media information section: resolution, video, audio, audio languages, subtitles, duration, bitrate, format and original language. Your provider supplies them, and the first playback completes them (all audio languages and subtitles). On series, each episode gets its own technical line and the page sums up the season.
+- All the scroll bars in the app now share the new look: a discreet track and a handle in the accent colour that thickens on hover.
+- Poster hover preview: it also shows the media information (resolution, HDR, codec, sound, languages) and, for series, the length of an episode.
+- Autoplay: choose when the next-episode countdown starts (Settings › Autoplay): at the end of the episode, as before, or before the end, during the credits, so that the next episode begins as soon as this one ends. The countdown can now last up to 60 seconds.
+- Windows on ARM: a native ARM64 version for PCs with Snapdragon processors and other ARM chips, with its own installer and its own automatic updates.
+
+### Security
+
+- Stream addresses from playlists and portals are now checked: network shares and the video engine's internal protocols are refused. A malicious playlist can no longer make Windows send a hash of your account password to an unknown server.
+- HTTPS certificates of IPTV servers are now verified. If your provider uses an invalid certificate, tick "Accept an invalid certificate" in the source's advanced options (not recommended).
+- Usernames, passwords and tokens are masked in the log, so it can be attached to a bug report.
+- The parental PIN is stored with a salted hash, and repeated wrong PINs or profile passwords now impose an increasing wait (from 5 seconds to 5 minutes).
+- Oversized playlists, catalogues or TV guides are rejected instead of filling the memory.
+- The trailer player refuses downloads and requests for the camera, microphone, location or notifications.
+- Test tools are no longer included in published versions.
+- Before a restore, the backup's source servers and, if any, its network recordings folder are shown.
+
+### Fixes
+
+- The "Who's watching?" title follows a change of language.
+- In My List, "Mark as watched" did nothing on a series: it now marks all its episodes.
+
 ## 1.0.0-beta.1
 
 *Released on 2026-11-23*

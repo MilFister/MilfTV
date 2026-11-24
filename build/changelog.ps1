@@ -66,7 +66,8 @@ function Write-ChangelogFiles([string]$dir) {
 }
 
 # Texte de la page d'une version sur GitHub : anglais visible, autres langues repliables.
-function Get-ReleaseBody([string]$version, [string]$setupName, [string]$portableName) {
+# $packages : une entree par architecture publiee, @{ Arch = 'x64' | 'arm64'; Setup = '...exe'; Portable = '...zip' }.
+function Get-ReleaseBody([string]$version, $packages) {
     $cl = Get-Changelog
     $entry = $cl.versions | Where-Object { $_.version -eq $version } | Select-Object -First 1
     if (-not $entry) { return $null }
@@ -75,9 +76,15 @@ function Get-ReleaseBody([string]$version, [string]$setupName, [string]$portable
         $lines = New-Object System.Collections.Generic.List[string]
         $lines.Add("### $($labels.download)")
         $lines.Add('')
-        $lines.Add("- **$setupName** ($($labels.setupKind)): $($labels.setup)")
-        $lines.Add("- **$portableName** ($($labels.portableKind)): $($labels.portable)")
-        $lines.Add('')
+        foreach ($p in $packages) {
+            if (@($packages).Count -gt 1) {
+                $lines.Add("**$($labels.($p.Arch))**")
+                $lines.Add('')
+            }
+            $lines.Add("- **$($p.Setup)** ($($labels.setupKind)): $($labels.setup)")
+            $lines.Add("- **$($p.Portable)** ($($labels.portableKind)): $($labels.portable)")
+            $lines.Add('')
+        }
         $lines.Add("> $($labels.smartscreen)")
         $lines.Add('')
         $lines.Add("### $($labels.changes)")

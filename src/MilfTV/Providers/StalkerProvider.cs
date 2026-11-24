@@ -342,7 +342,7 @@ public sealed class StalkerProvider : IProvider
 
     public void Dispose()
     {
-        // Rien de lourd : Http.Iptv est partagé et ne doit pas être libéré ici.
+        // Rien de lourd : les clients de Http sont partagés et ne doivent pas être libérés ici.
         Volatile.Write(ref _session, null);
     }
 
@@ -1130,7 +1130,8 @@ public sealed class StalkerProvider : IProvider
         string body;
         try
         {
-            using var resp = await Http.Iptv.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+            // Certificat vérifié, sauf si l'utilisateur a accepté un certificat non valide pour ce portail.
+            using var resp = await Http.For(id.AllowInvalidCertificate).SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (resp.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
                 throw new StalkerAuthException();
             if (!resp.IsSuccessStatusCode)
@@ -1234,7 +1235,7 @@ public sealed class StalkerProvider : IProvider
         var hw2 = Convert.ToHexString(SHA1.HashData(macBytes)).ToLowerInvariant();
         var ua = NullIfBlank(src.UserAgent)?.Trim() ?? DefaultUserAgent;
         var cookie = $"mac={Uri.EscapeDataString(mac)}; stb_lang=en; timezone={Uri.EscapeDataString(TimeZoneIana)}";
-        return new Identity(mac, sn, deviceId, signature, hw2, ua, cookie);
+        return new Identity(mac, sn, deviceId, signature, hw2, ua, cookie, src.AllowInvalidCertificate);
     }
 
     private static string? NormalizeMac(string? mac)
@@ -1530,6 +1531,7 @@ public sealed class StalkerProvider : IProvider
         ProviderException pe => pe.Message,
         StalkerAuthException => Loc.T("Stalker.MacRefused"),
         TimeoutException => Loc.T("Stalker.UnreachableTimeout"),
+        HttpRequestException h when Http.IsCertificateError(h) => Loc.T("Source.CertInvalid"),
         HttpRequestException { StatusCode: { } code } => Loc.T("Stalker.HttpError", (int)code),
         HttpRequestException or SocketException or IOException => Loc.T("Stalker.Unreachable"),
         StalkerFormatException or JsonException => Loc.T("Stalker.BadResponse"),
@@ -1544,7 +1546,8 @@ public sealed class StalkerProvider : IProvider
         public string LogoDir => Root + "/misc/logos/320/";
     }
 
-    private sealed record Identity(string Mac, string Sn, string DeviceId, string Signature, string HwVersion2, string UserAgent, string Cookie);
+    private sealed record Identity(string Mac, string Sn, string DeviceId, string Signature, string HwVersion2, string UserAgent, string Cookie,
+        bool AllowInvalidCertificate = false);
 
     private sealed class Session(Portal portal, Identity identity, string token, JsonElement profile, DateTime createdUtc)
     {

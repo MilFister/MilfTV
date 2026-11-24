@@ -74,11 +74,15 @@ public sealed class XtreamProvider : IProvider
     {
         try
         {
-            return await Http.GetJsonAsync(Http.Iptv, url, Source.UserAgent, timeout, ct).ConfigureAwait(false);
+            return await Http.GetJsonAsync(Http.ForSource(Source), url, Source.UserAgent, timeout, ct).ConfigureAwait(false);
         }
         catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
         {
             throw new ProviderException(Loc.T("Xtream.AccessDenied"), ex);
+        }
+        catch (HttpRequestException ex) when (Http.IsCertificateError(ex))
+        {
+            throw new ProviderException(Loc.T("Source.CertInvalid"), ex);
         }
         catch (HttpRequestException ex)
         {
@@ -297,6 +301,7 @@ public sealed class XtreamProvider : IProvider
                 d.Cast = cast.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(15).Select(n => new CastMember { Name = n }).ToList();
             if (doc.RootElement.Obj("movie_data") is { } md && NullIfEmpty(md.Str("container_extension")) is { } ext)
                 movie.Extension = ext;
+            d.Media = MediaInfo.FromXtream(info, movie.Extension);
             return d;
         }
         catch (ProviderException ex)
@@ -376,6 +381,7 @@ public sealed class XtreamProvider : IProvider
                         DurationSecs = epInfo?.Int("duration_secs"),
                         AirDate = epInfo?.Str("releasedate", "air_date"),
                         Rating = epInfo is { } ei ? NormalizeRating(ei.Dbl("rating"), null) : null,
+                        ProviderMedia = epInfo is { } em ? MediaInfo.FromXtream(em, ep.Str("container_extension")) : null,
                     };
                     if (!bySeason.TryGetValue(season, out var l)) bySeason[season] = l = new List<Episode>();
                     l.Add(episode);

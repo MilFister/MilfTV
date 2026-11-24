@@ -503,6 +503,10 @@ internal sealed class TrailerSurface : NativeControlHost
             e.Handled = true;
             _owner.OpenExternal(e.Uri);
         };
+        // Un lecteur de bandes-annonces n'a besoin ni de télécharger des fichiers, ni de la caméra, du micro, de la
+        // position ou des notifications : tout est refusé sans rien demander.
+        wv.DownloadStarting += (_, e) => e.Cancel = true;
+        wv.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
         wv.ContainsFullScreenElementChanged += (_, _) => _owner.OnFullScreen(wv.ContainsFullScreenElement);
         wv.ProcessFailed += (_, e) =>
         {

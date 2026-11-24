@@ -17,9 +17,13 @@ public static class Updates
 {
     public enum UpdateState { Off, Idle, Checking, Downloading, Ready, UpToDate, Failed }
 
-    /// <summary>Canal Velopack des versions stables (canal par défaut sous Windows).</summary>
-    public const string StableChannel = "win";
-    public const string BetaChannel = "beta";
+    /// <summary>Les copies ARM64 ont leurs propres canaux : une copie ne reçoit jamais les fichiers de l'autre architecture.</summary>
+    private static readonly string ArchSuffix =
+        System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64 ? "-arm64" : "";
+
+    /// <summary>Canal Velopack des versions stables (« win », canal par défaut sous Windows ; « win-arm64 » en ARM64).</summary>
+    public static readonly string StableChannel = "win" + ArchSuffix;
+    public static readonly string BetaChannel = "beta" + ArchSuffix;
 
     /// <summary>Source des versions inscrite à la compilation (vide = mises à jour désactivées).</summary>
     public static string Feed { get; } = ReadFeed();
@@ -70,7 +74,7 @@ public static class Updates
     private static string ReadFeed()
     {
         // Test uniquement (données isolées) : dossier local de versions.
-        if (Environment.GetEnvironmentVariable("MILFTV_DATA") is { Length: > 0 }
+        if (ViewModels.DevScript.ToolsCompiled && Environment.GetEnvironmentVariable("MILFTV_DATA") is { Length: > 0 }
             && Environment.GetEnvironmentVariable("MILFTV_UPDATE_FEED") is { Length: > 0 } test)
             return test;
         return typeof(Updates).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()

@@ -24,8 +24,14 @@
             <TextBlock Text="{l:Tr Badge.Watched}" FontSize="10.5" FontWeight="Bold" Foreground="White" VerticalAlignment="Center" />
           </StackPanel>
         </Border>
-        <Border CornerRadius="7" Padding="7,3" Background="{DynamicResource Accent}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
-                IsVisible="{Binding IsInProgress}">
+        <Border CornerRadius="7" Padding="7,3" Background="{DynamicResource Accent}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
+          <Border.IsVisible>
+            <!-- Série vue en entier : la pastille « VU » remplace « EN COURS » -->
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="IsInProgress" />
+              <Binding Path="!IsWatched" />
+            </MultiBinding>
+          </Border.IsVisible>
           <TextBlock Text="{l:Tr Badge.InProgress}" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource OnAccent}" />
         </Border>
         <ProgressBar Classes="thin" Value="{Binding WatchProgress}" Maximum="100" VerticalAlignment="Bottom" CornerRadius="0" Height="4" Background="#66000000"

@@ -10,11 +10,9 @@
              x:Class="MilfTV.Views.HomeView"
              x:DataType="vm:HomeViewModel">
   <UserControl.Styles>
-    <Style Selector="ScrollViewer.row">
-      <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
-      <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+    <Style Selector="ctl|Rail.row">
       <Setter Property="Margin" Value="-8,0" />
-      <Setter Property="Padding" Value="8,6,8,14" />
+      <Setter Property="ScrollPadding" Value="8,6,8,14" />
     </Style>
     <Style Selector="Grid.rowHeader">
       <Setter Property="Margin" Value="0,0,0,8" />
@@ -100,7 +98,7 @@
       <!-- ═══ Reprendre la lecture ═══ -->
       <StackPanel IsVisible="{Binding HasContinue}" Grid.Row="{Binding RowContinue}" Margin="0,0,0,30">
         <TextBlock Classes="h2" Text="{l:Tr Ui.ReprendreLaLecture}" Margin="2,0,0,8" />
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding ContinueWatching}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="16" /></ItemsPanelTemplate>
@@ -145,13 +143,13 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <!-- ═══ Séries en cours (profil) ═══ -->
       <StackPanel IsVisible="{Binding HasSeriesInProgress}" Grid.Row="{Binding RowSeries}" Margin="0,0,0,30">
         <TextBlock Classes="h2" Text="{l:Tr Home.SeriesInProgress}" Margin="2,0,0,8" />
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding SeriesInProgress}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -181,12 +179,12 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <StackPanel IsVisible="{Binding HasMyList}" Grid.Row="{Binding RowMyList}" Margin="0,0,0,30">
         <TextBlock Classes="h2" Text="{l:Tr Home.MyList}" Margin="2,0,0,8" />
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding MyList}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -199,12 +197,12 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <StackPanel IsVisible="{Binding HasRecommended}" Grid.Row="{Binding RowRecommended}" Margin="0,0,0,30">
         <TextBlock Classes="h2" Text="{l:Tr Home.Recommended}" Margin="2,0,0,8" />
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding Recommended}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -217,12 +215,12 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <StackPanel IsVisible="{Binding HasBecause1}" Grid.Row="{Binding RowBecause}" Margin="0,0,0,30">
         <TextBlock Classes="h2" Text="{Binding Because1Title}" Margin="2,0,0,8" />
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding Because1}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -235,12 +233,12 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <StackPanel IsVisible="{Binding HasBecause2}" Grid.Row="{Binding RowBecause2}" Margin="0,0,0,30">
         <TextBlock Classes="h2" Text="{Binding Because2Title}" Margin="2,0,0,8" />
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding Because2}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -253,7 +251,7 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <!-- ═══ Chaînes favorites ═══ -->
@@ -262,7 +260,7 @@
           <TextBlock Classes="h2" Text="{l:Tr Ui.VosChainesFavorites}" Margin="2,0,0,0" />
           <Button Grid.Column="1" Classes="flat" Content="{l:Tr Ui.ToutVoir}" Command="{Binding GoCommand}" CommandParameter="favorites" Foreground="{DynamicResource Accent}" />
         </Grid>
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding FavoriteChannels}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="14" /></ItemsPanelTemplate>
@@ -275,13 +273,13 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <!-- ═══ Récemment regardées ═══ -->
       <StackPanel IsVisible="{Binding HasRecentChannels}" Grid.Row="{Binding RowRecentChannels}" Margin="0,0,0,30">
         <TextBlock Classes="h2" Text="{l:Tr Ui.ChainesRecemmentRegardees}" Margin="2,0,0,8" />
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding RecentChannels}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="14" /></ItemsPanelTemplate>
@@ -294,7 +292,7 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <!-- ═══ Films récents ═══ -->
@@ -303,7 +301,7 @@
           <TextBlock Classes="h2" Text="{l:Tr Ui.FilmsAjoutesRecemment}" Margin="2,0,0,0" />
           <Button Grid.Column="1" Classes="flat" Content="{l:Tr Ui.TousLesFilms}" Command="{Binding GoCommand}" CommandParameter="movies" Foreground="{DynamicResource Accent}" />
         </Grid>
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding RecentMovies}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -316,7 +314,7 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <!-- ═══ Séries récentes ═══ -->
@@ -325,7 +323,7 @@
           <TextBlock Classes="h2" Text="{l:Tr Ui.SeriesAjouteesRecemment}" Margin="2,0,0,0" />
           <Button Grid.Column="1" Classes="flat" Content="{l:Tr Ui.ToutesLesSeries}" Command="{Binding GoCommand}" CommandParameter="series" Foreground="{DynamicResource Accent}" />
         </Grid>
-        <ScrollViewer Classes="row">
+        <ctl:Rail Classes="row">
           <ItemsControl ItemsSource="{Binding RecentSeries}">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="18" /></ItemsPanelTemplate>
@@ -338,7 +336,7 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-        </ScrollViewer>
+        </ctl:Rail>
       </StackPanel>
 
       <!-- ═══ Accès rapides si peu de contenu ═══ -->

@@ -37,6 +37,10 @@ public sealed class SourceConfig
     /// <summary>User-Agent HTTP facultatif (certains fournisseurs l'exigent).</summary>
     public string? UserAgent { get; set; }
 
+    /// <summary>Accepter un certificat HTTPS non valide pour ce serveur (choix explicite de l'utilisateur, déconseillé) :
+    /// sinon les certificats sont vérifiés, comme pour tout le reste.</summary>
+    public bool AllowInvalidCertificate { get; set; }
+
     /// <summary>Profil qui a ajouté la source (seul à pouvoir la modifier). Null = ancienne source.</summary>
     public string? OwnerProfileId { get; set; }
 
@@ -87,7 +91,7 @@ public abstract partial class CatalogItem : ObservableObject
 
     [JsonIgnore] public string SearchKey { get; set; } = "";
     [JsonIgnore, ObservableProperty] private bool _isFavorite;
-    /// <summary>Profil courant : film vu en entier.</summary>
+    /// <summary>Profil courant : film (ou série) vu en entier.</summary>
     [JsonIgnore, ObservableProperty] private bool _isWatched;
     /// <summary>Profil courant : progression d'un film entamé (0–100).</summary>
     [JsonIgnore, ObservableProperty] private double _watchProgress;
@@ -192,6 +196,11 @@ public sealed partial class Episode : ObservableObject
     [JsonIgnore, ObservableProperty] private double _progress;
     [JsonIgnore, ObservableProperty] private bool _isWatched;
     [JsonIgnore, ObservableProperty] private bool _isCurrent;
+    /// <summary>Informations techniques annoncées par le fournisseur.</summary>
+    public MediaInfo? ProviderMedia { get; set; }
+    /// <summary>Informations affichées : relevé du lecteur complété par le fournisseur.</summary>
+    [JsonIgnore, ObservableProperty, NotifyPropertyChangedFor(nameof(MediaLine))] private MediaInfo? _media;
+    [JsonIgnore] public string? MediaLine => Media?.ShortLine;
 
     [JsonIgnore] public string Code => $"S{Season:00}E{Number:00}";
     /// <summary>Titre affiché : celui du fournisseur ou de TMDB, sinon « Épisode N ».</summary>
@@ -234,6 +243,10 @@ public sealed class MediaDetails
     public string? TrailerYoutubeKey { get; set; }
     public string? TmdbId { get; set; }
     public string? Certification { get; set; }
+    /// <summary>Langue originale (code ISO 639-1, TMDB).</summary>
+    public string? OriginalLanguage { get; set; }
+    /// <summary>Informations techniques annoncées par le fournisseur (films).</summary>
+    public MediaInfo? Media { get; set; }
 }
 
 public sealed class SeriesDetails

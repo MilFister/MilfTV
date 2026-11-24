@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="using:MilfTV.Localization"
+             xmlns:vm="using:MilfTV.ViewModels"
+             xmlns:img="using:MilfTV.Images"
+             x:Class="MilfTV.Views.ChannelPreviewCard"
+             Width="380">
+  <!-- Fiche d'une chaîne au survol de la liste du lecteur. Toujours sombre : elle s'affiche par-dessus la vidéo. -->
+  <Border x:Name="Root" x:DataType="vm:ChannelPreviewViewModel" CornerRadius="14" ClipToBounds="True"
+          Background="#F7141418" BorderBrush="#2EFFFFFF" BorderThickness="1" TextElement.Foreground="White">
+    <StackPanel>
+      <!-- Image du programme en cours, quand le guide en fournit une -->
+      <Border Height="190" IsVisible="{Binding NowImage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <Image img:ImageLoader.Source="{Binding NowImage}" img:ImageLoader.DecodeWidth="400" Stretch="UniformToFill" />
+      </Border>
+
+      <StackPanel Margin="16,14,16,16" Spacing="10">
+        <!-- Chaîne : logo, numéro, nom, état -->
+        <Grid ColumnDefinitions="Auto,*">
+          <Border Width="56" Height="40" CornerRadius="8" Background="#1FFFFFFF" ClipToBounds="True" VerticalAlignment="Center">
+            <Panel>
+              <TextBlock Text="{Binding Channel.Initials}" FontSize="13" FontWeight="Bold" Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              <Image img:ImageLoader.Source="{Binding Channel.ImageUrl}" img:ImageLoader.DecodeWidth="120" Stretch="Uniform" Margin="4" />
+            </Panel>
+          </Border>
+          <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="3">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+              <TextBlock Text="{Binding NumberText}" Opacity="0.55" FontSize="12.5" VerticalAlignment="Center"
+                         IsVisible="{Binding NumberText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+              <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" MaxWidth="260" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Border CornerRadius="6" Padding="7,1" Background="#33FFFFFF" IsVisible="{Binding IsPlaying}">
+                <TextBlock Text="{l:Tr ChannelPreview.Watching}" FontSize="11" FontWeight="SemiBold" />
+              </Border>
+              <Border CornerRadius="6" Padding="7,1" Background="{DynamicResource Live}" IsVisible="{Binding IsRecording}">
+                <TextBlock Text="{l:Tr ChannelPreview.Recording}" FontSize="11" FontWeight="SemiBold" />
+              </Border>
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+
+        <!-- En ce moment -->
+        <StackPanel Spacing="5" IsVisible="{Binding HasNow}">
+          <TextBlock Text="{l:Tr ChannelPreview.Now}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource Accent}" />
+          <TextBlock Text="{Binding Now.Title}" FontSize="17" FontWeight="Bold" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{Binding NowMeta}" FontSize="12.5" Opacity="0.7" TextWrapping="Wrap" />
+          <ProgressBar Classes="thin" Value="{Binding NowProgress}" Maximum="100" Background="#33FFFFFF" Margin="0,3,0,2" />
+          <TextBlock Text="{Binding Now.Description}" FontSize="13" LineHeight="19" Opacity="0.82" TextWrapping="Wrap" MaxLines="5"
+                     TextTrimming="CharacterEllipsis" IsVisible="{Binding HasDescription}" />
+        </StackPanel>
+
+        <!-- À suivre -->
+        <StackPanel Spacing="4" IsVisible="{Binding HasNext}">
+          <TextBlock Text="{l:Tr ChannelPreview.Next}" FontSize="11" FontWeight="Bold" Opacity="0.6" Margin="0,2,0,0" />
+          <ItemsControl ItemsSource="{Binding Next}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ChannelPreviewNext">
+                <Grid ColumnDefinitions="52,*" Margin="0,2">
+                  <TextBlock Text="{Binding Time}" FontSize="13" Opacity="0.6" />
+                  <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <!-- Chargement, ou pas de guide pour cette chaîne -->
+        <Arc Classes="spinner small white" HorizontalAlignment="Left" IsVisible="{Binding IsLoading}" />
+        <TextBlock Text="{l:Tr ChannelPreview.NoEpg}" FontSize="13" Opacity="0.7" TextWrapping="Wrap" IsVisible="{Binding HasNoEpg}" />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

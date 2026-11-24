@@ -419,7 +419,17 @@ public sealed partial class Library : ObservableObject
     public bool IsHidden(CatalogItem item) => item.IsLocked && (!ParentalUnlocked || IsKidProfile);
     public bool IsHidden(Category cat) => cat.IsLocked && (!ParentalUnlocked || IsKidProfile);
 
-    public bool CheckPin(string pin) => S.HasPin && Secret.HashPin(pin) == S.ParentalPinHash;
+    public bool CheckPin(string pin)
+    {
+        if (!S.HasPin || !Secret.VerifyPin(pin, S.ParentalPinHash, out var legacy)) return false;
+        // Ancienne empreinte (SHA-256 sans sel) : remplacée par une empreinte salée dès le premier code correct.
+        if (legacy)
+        {
+            S.ParentalPinHash = Secret.HashPin(pin);
+            SettingsStore.Save();
+        }
+        return true;
+    }
 
     // ───────────── Recherche ─────────────
 

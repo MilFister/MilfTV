@@ -278,7 +278,7 @@ public sealed class EpgStore
             HttpResponseMessage? response = null;
             try
             {
-                response = await Http.Iptv.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+                response = await Http.ForUrl(url).SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
                 if (!response.IsSuccessStatusCode)
                     throw new ProviderException(Loc.T("Epg.DownloadFailed", (int)response.StatusCode));
                 var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
@@ -307,6 +307,7 @@ public sealed class EpgStore
             return new ProviderException(Loc.T("Epg.Timeout"), ex);
         return ex switch
         {
+            HttpRequestException h when Http.IsCertificateError(h) => new ProviderException(Loc.T("Source.CertInvalid"), ex),
             HttpRequestException { StatusCode: { } code } => new ProviderException(Loc.T("Epg.DownloadFailed", (int)code), ex),
             HttpRequestException h => new ProviderException(Loc.T("Epg.DownloadFailed", h.Message), ex),
             XmltvFormatException => new ProviderException(ex.Message, ex),

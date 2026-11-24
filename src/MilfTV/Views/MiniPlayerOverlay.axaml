@@ -53,6 +53,10 @@
     <Style Selector="Button.mini.big TextBlock.icon">
       <Setter Property="FontSize" Value="22" />
     </Style>
+    <Style Selector="Slider.miniVolume">
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Margin" Value="0,-6" />
+    </Style>
   </UserControl.Styles>
 
   <Panel>
@@ -131,9 +135,16 @@
       <!-- Bas : son, position, progression -->
       <StackPanel VerticalAlignment="Bottom" Margin="10,0,18,8" Spacing="4">
         <Grid ColumnDefinitions="Auto,*,Auto">
-          <Button Classes="mini" Width="30" Height="30" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="{l:Tr Ui.SonM}">
-            <TextBlock Classes="icon" Text="{Binding IsMuted, Converter={x:Static ctl:Conv.MuteGlyph}}" FontSize="13" />
-          </Button>
+          <!-- Volume : un appui ici ne déplace pas le mini-lecteur et ne l'agrandit pas (MiniPlayerOverlay.axaml.cs). -->
+          <StackPanel x:Name="VolumeArea" Orientation="Horizontal" Spacing="6" Background="Transparent" Cursor="Arrow">
+            <Button Classes="mini" Width="30" Height="30" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="{l:Tr Ui.SonM}">
+              <TextBlock Classes="icon" Text="{Binding IsMuted, Converter={x:Static ctl:Conv.MuteGlyph}}" FontSize="13" />
+            </Button>
+            <Slider x:Name="VolumeSlider" Classes="miniVolume" Width="90" Minimum="0" Maximum="150" Value="{Binding Volume}"
+                    VerticalAlignment="Center" ToolTip.Tip="{l:Tr Mini.Volume}" Cursor="Hand" />
+            <TextBlock x:Name="VolumeText" Text="{Binding Volume, StringFormat='{}{0:0} %'}" FontSize="11.5" Opacity="0.85"
+                       VerticalAlignment="Center" MinWidth="34" IsHitTestVisible="False" />
+          </StackPanel>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" IsHitTestVisible="False">
             <TextBlock Text="{Binding PositionText}" FontSize="11.5" Opacity="0.9" />
             <TextBlock Text="{Binding DurationText, StringFormat='/ {0}'}" FontSize="11.5" Opacity="0.65"

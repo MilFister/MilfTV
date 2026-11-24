@@ -86,6 +86,10 @@ public sealed partial class BackupDialogViewModel : ViewModelBase
             FilePath = path;
             Summary = Loc.T("Backup.Summary", m.Created.LocalDateTime.ToString("g", Loc.Culture), m.App, m.Profiles, m.Sources,
                 m.History, m.MyList, m.Favorites, m.Recordings);
+            // Ce qui sera mis en place : à vérifier si la sauvegarde ne vient pas de vous.
+            var (servers, networkFolder) = await Task.Run(() => Backup.ReadRestoreDetails(path));
+            if (servers.Count > 0) Summary += "\n" + Loc.T("Backup.Servers", string.Join(", ", servers));
+            if (networkFolder is not null) Summary += "\n" + Loc.T("Backup.NetworkFolder", networkFolder);
             NeedsPassword = m.Secrets == "password";
             SecretsWarning = readable ? null : Loc.T("Backup.SecretsLost");
             Password = "";

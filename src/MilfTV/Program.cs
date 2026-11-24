@@ -37,7 +37,14 @@ internal static class Program
         // d'une mise à jour ou d'une désinstallation, il traite l'étape demandée puis termine le processus.
         // Pas d'installation automatique au démarrage d'une version téléchargée : MilfTV l'installe à la fermeture,
         // seulement si elle correspond au canal choisi (stable ou bêta).
-        try { Velopack.VelopackApp.Build().SetAutoApplyOnStartup(false).Run(); }
+        // Raccourci du bureau : proposé au premier lancement après l'installation, retiré à la désinstallation.
+        try
+        {
+            Velopack.VelopackApp.Build().SetAutoApplyOnStartup(false)
+                .OnFirstRun(_ => DesktopShortcut.FirstRunAfterInstall = true)
+                .OnBeforeUninstallFastCallback(_ => DesktopShortcut.RemoveOnUninstall())
+                .Run();
+        }
         catch (Exception ex) { Log.Warn("Velopack : " + ex.Message); }
         // Redémarrage après une restauration : on attend la fin de l'instance précédente.
         Backup.WaitForPreviousInstance(args);
@@ -98,7 +105,7 @@ internal static class Program
     {
         var compat = new[] { Win32CompositionMode.WinUIComposition, Win32CompositionMode.DirectComposition, Win32CompositionMode.RedirectionSurface };
         var smooth = new[] { Win32CompositionMode.LowLatencyDxgiSwapChain, Win32CompositionMode.WinUIComposition, Win32CompositionMode.DirectComposition, Win32CompositionMode.RedirectionSurface };
-        var mode = Environment.GetEnvironmentVariable("MILFTV_COMPOSITION") switch
+        var mode = (ViewModels.DevScript.ToolsCompiled ? Environment.GetEnvironmentVariable("MILFTV_COMPOSITION") : null) switch
         {
             "dxgi" => smooth,
             "winui" => compat,

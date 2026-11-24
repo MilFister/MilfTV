@@ -9,3 +9,6 @@ artifacts/
 publish-*/
 # Le chargeur Vulkan (1,7 Mo, Apache-2.0) est versionné ; libmpv-2.dll (~120 Mo) dépasse la limite de GitHub.
 !native/vulkan-1.dll
+# Version ARM64 : mêmes règles dans native/arm64.
+native/arm64/*.dll
+!native/arm64/vulkan-1.dll

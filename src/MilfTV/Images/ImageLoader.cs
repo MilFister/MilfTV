@@ -168,8 +168,8 @@ public sealed class ImageLoader
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
             using var req = Http.Request(url);
-            // Images d'un service connu (TMDB) : client strict ; images du fournisseur : certificats tolérés.
-            var client = Uri.TryCreate(url, UriKind.Absolute, out var u) && u.Host.EndsWith("tmdb.org", StringComparison.OrdinalIgnoreCase) ? Http.Web : Http.Iptv;
+            // Certificats vérifiés, sauf pour le serveur d'une source où l'utilisateur a accepté un certificat non valide.
+            var client = Uri.TryCreate(url, UriKind.Absolute, out var u) && u.Host.EndsWith("tmdb.org", StringComparison.OrdinalIgnoreCase) ? Http.Web : Http.ForUrl(url);
             using var resp = await client.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode)
                 return (null, resp.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Gone or System.Net.HttpStatusCode.Forbidden);

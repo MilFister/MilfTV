@@ -178,7 +178,7 @@ public sealed partial class HomeViewModel : ViewModelBase
             return new
             {
                 Continue = Lib.GetContinueWatching(20).Where(w => !IsHiddenEntry(c, w)).ToList(),
-                Series = Lib.GetSeriesInProgress(20),
+                Series = Lib.GetSeriesInProgress(30).Where(sp => !sp.Series.IsWatched).Take(20).ToList(),
                 MyList = Lib.GetWatchlistItems().Take(30).ToList(),
                 Recommended = useHistory ? Lib.Recommend(24) : new List<CatalogItem>(),
                 Seeds = seeds,

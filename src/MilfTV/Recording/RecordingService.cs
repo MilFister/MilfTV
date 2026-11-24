@@ -212,6 +212,8 @@ public sealed partial class RecordingService
             _ = WatchDiskAsync(r, active, folder);
 
             var info = await ResolveAsync(r, cts.Token);
+            // Même règle que le lecteur : pas de partage réseau ni de protocole interne venus de la source.
+            if (!StreamUrlPolicy.IsAllowed(info.Url)) throw new InvalidOperationException(Loc.T("Player.UnsafeUrl"));
             var hls = LooksHls(info.Url);
             var bitrate = hls ? await HlsBitrateAsync(info, s.RecordingQuality, cts.Token) : null;
 
@@ -341,7 +343,7 @@ public sealed partial class RecordingService
             timeout.CancelAfter(TimeSpan.FromSeconds(10));
             using var req = Http.Request(info.Url, info.UserAgent ?? SettingsStore.Current.DefaultUserAgent);
             if (!string.IsNullOrEmpty(info.Referrer)) req.Headers.TryAddWithoutValidation("Referer", info.Referrer);
-            using var resp = await Http.Iptv.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            using var resp = await Http.ForUrl(info.Url).SendAsync(req, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
             resp.EnsureSuccessStatusCode();
             var text = await resp.Content.ReadAsStringAsync(timeout.Token);
             var rates = new SortedSet<long>();
@@ -381,7 +383,7 @@ public sealed partial class RecordingService
             {
                 using var req = Http.Request(info.Url, info.UserAgent ?? SettingsStore.Current.DefaultUserAgent);
                 if (!string.IsNullOrEmpty(info.Referrer)) req.Headers.TryAddWithoutValidation("Referer", info.Referrer);
-                using var resp = await Http.Iptv.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+                using var resp = await Http.ForUrl(info.Url).SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
                 resp.EnsureSuccessStatusCode();
                 if (resp.Content.Headers.ContentType?.MediaType?.Contains("mpegurl", StringComparison.OrdinalIgnoreCase) == true)
                     throw new HlsDetectedException();
